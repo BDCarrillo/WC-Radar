@@ -52,7 +52,7 @@ namespace WCRadar
             var s = Settings.Instance;
             if (messageText == "/radar")
             {
-                MyAPIGateway.Utilities.ShowMessage("WC Radarr", "To cycle displays- \n /radar symbols \n/radar lines");
+                MyAPIGateway.Utilities.ShowMessage("WC Radar", "To cycle displays- \n /radar symbols \n/radar lines");
                 sendToOthers = false;
             }
             if (messageText == "/radar symbols")
@@ -140,15 +140,59 @@ namespace WCRadar
                         MyAPIGateway.Utilities.ShowNotification(projInbound.Item2 + " Fast Movers Inbound", 480, "Red");
                         //TODO configurable text?  audio alert?
                     }
-                    
-                    //TODO Obstructions: Check dot of dirToward for a collision alert?
 
+                    //TODO Obstructions: Check dot of dirToward for a collision alert?
+                    foreach (var obs in obsList)
+                    {
+                        var colorObs = new Vector4(1, 1, 1, 0.01f);//Temp, pull to settings
+                        var position = obs.PositionComp.WorldAABB.Center;
+
+                        if (s.enableSymbols && Session.Camera.IsInFrustum(obs.PositionComp.WorldAABB))
+                        {
+                            var size = obs.PositionComp.LocalVolume.Radius;
+                            var rangeScaledSize = (float)Vector3D.Distance(Session.Camera.Position, position) / 300;
+                            var camMat = MyAPIGateway.Session.Camera.WorldMatrix;
+                            var symLen = 6 * rangeScaledSize;
+                            var texture = MyStringId.GetOrCompute("particle_laser");
+                            //Corners
+                            var targTopLeft = position + camMat.Up * size + camMat.Left * size;
+                            var targTopRight = position + camMat.Up * size + camMat.Right * size;
+                            var targBotLeft = position + camMat.Down * size + camMat.Left * size;
+                            var targBotRight = position + camMat.Down * size + camMat.Right * size;
+
+                            MySimpleObjectDraw.DrawLine(targTopLeft, targTopLeft + camMat.Right * symLen, texture, ref colorObs, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                            MySimpleObjectDraw.DrawLine(targTopLeft, targTopLeft + camMat.Down * symLen, texture, ref colorObs, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+
+                            MySimpleObjectDraw.DrawLine(targTopRight, targTopRight + camMat.Left * symLen, texture, ref colorObs, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                            MySimpleObjectDraw.DrawLine(targTopRight, targTopRight + camMat.Down * symLen, texture, ref colorObs, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+
+                            MySimpleObjectDraw.DrawLine(targBotLeft, targBotLeft + camMat.Right * symLen, texture, ref colorObs, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                            MySimpleObjectDraw.DrawLine(targBotLeft, targBotLeft + camMat.Up * symLen, texture, ref colorObs, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+
+                            MySimpleObjectDraw.DrawLine(targBotRight, targBotRight + camMat.Left * symLen, texture, ref colorObs, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                            MySimpleObjectDraw.DrawLine(targBotRight, targBotRight + camMat.Up * symLen, texture, ref colorObs, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+
+                        }
+                        if (s.enableLines)
+                        {
+                            //Line to target from player pos
+                            var dirToTarg = Vector3D.Normalize(position - playerPos);
+                            var lineLength = 100 + controlledGrid.PositionComp.LocalVolume.Radius;
+                            var lineOffset = controlledGrid.PositionComp.LocalVolume.Radius * 1.1;
+                            MySimpleObjectDraw.DrawLine(playerPos + dirToTarg * lineOffset, playerPos + dirToTarg * lineLength, particle, ref colorObs, 1, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                        }
+
+                       // if(controlledGrid.PositionComp.WorldAABB.Center + controlledGrid.LinearVelocity)
+                       // MyAPIGateway.Utilities.ShowNotification("Collision Warning", 480, "Gray");
+
+
+                    }
 
                     foreach (var targ in threatList)
                     {
                         if (targ.Item1.MarkedForClose) continue;
                         var parent = targ.Item1.GetTopMostParent();
-                        if (parent.MarkedForClose || parent is null) continue;
+                        if (parent.MarkedForClose || parent == null) continue;
                         var position = parent.PositionComp.WorldAABB.Center;
                         var offscreen = false;
 
@@ -169,7 +213,7 @@ namespace WCRadar
                             var edgeY = (float)(Session.Camera.ViewportSize.Y * 0.5 - (MathHelper.Clamp(screenCoords.Y, -0.97, 0.97) * Session.Camera.ViewportSize.Y * 0.5));
                             var edgeDrawLine = Session.Camera.WorldLineFromScreen(new Vector2(edgeX, edgeY));
                             var dirToPlayer = Vector3D.Normalize(edgeDrawLine.From - playerPos);
-                            MyAPIGateway.Utilities.ShowNotification("Screen coords: " + screenCoords, 120, "Red");
+                            //MyAPIGateway.Utilities.ShowNotification("Screen coords: " + screenCoords, 120, "Red");
 
                             MySimpleObjectDraw.DrawLine(edgeDrawLine.From, edgeDrawLine.From + dirToPlayer, MyStringId.GetOrCompute("square"), ref colorEnemy, 0.0005f, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
                             offscreen = true;
