@@ -146,52 +146,71 @@ namespace WCRadar
 
                     foreach (var targ in threatList)
                     {
-                        var parent = targ.Item1.GetTopMostParent();                     
+                        if (targ.Item1.MarkedForClose) continue;
+                        var parent = targ.Item1.GetTopMostParent();
+                        if (parent.MarkedForClose || parent is null) continue;
                         var position = parent.PositionComp.WorldAABB.Center;
+                        var offscreen = false;
 
-                        Session.Camera.IsInFrustum(parent.PositionComp.WorldAABB);
+                        if (!Session.Camera.IsInFrustum(parent.PositionComp.WorldAABB))
+                        {
+                            //TODO mess with the particle for this 
+                            //TODO Sort out clamping and value treatment when it's way above 1 or -1
+                            //TODO resolve issues if camera is between playerpos and target
+                            var screenCoords = Session.Camera.WorldToScreen(ref position);
 
-                        var distToTarg = (int)Vector3D.Distance(position, playerPos);
-                        var dirToTarg = Vector3D.Normalize(position - playerPos);
-                        var size = parent.PositionComp.LocalVolume.Radius;
-                        size += 10;
-                        var name = parent.DisplayName;
+                            if (screenCoords.Z > 1)//Camera is between playerpos and target?
+                            {
 
-                        #region Direction Lines
-                        //Line to target from player pos
-                        var lineLength = 100 + controlledGrid.PositionComp.LocalVolume.Radius;
-                        var lineOffset = controlledGrid.PositionComp.LocalVolume.Radius;                       
-                        MySimpleObjectDraw.DrawLine(playerPos + dirToTarg * lineOffset, playerPos + dirToTarg * lineLength, particle, ref colorEnemy, 1, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
-                        #endregion
+                            }
 
 
+                            var edgeX = (float)(Session.Camera.ViewportSize.X * 0.5 + (MathHelper.Clamp(screenCoords.X, -0.97, 0.97) * Session.Camera.ViewportSize.X * 0.5));
+                            var edgeY = (float)(Session.Camera.ViewportSize.Y * 0.5 - (MathHelper.Clamp(screenCoords.Y, -0.97, 0.97) * Session.Camera.ViewportSize.Y * 0.5));
+                            var edgeDrawLine = Session.Camera.WorldLineFromScreen(new Vector2(edgeX, edgeY));
+                            var dirToPlayer = Vector3D.Normalize(edgeDrawLine.From - playerPos);
+                            MyAPIGateway.Utilities.ShowNotification("Screen coords: " + screenCoords, 120, "Red");
 
-                        #region Symbol Drawing
-                        //transparentMaterial symbol drawn on target
-                        //Explore using left or right instead of up to correct for 90* rotation of symbol?
-                        //This approach is likely to have issues at extreme range, as the symbol is drawn on the target itself and may be hard to see at distance
-                        var targCtr = playerPos + dirToTarg * distToTarg;
-                        var targTop = targCtr + Up * size;
-                        MySimpleObjectDraw.DrawLine(targTop, targTop - Up * size * 2, MyStringId.GetOrCompute("CrosshairWCRad"), ref colorEnemy, size, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
-                        #endregion
-
-
-
-                        #region Transparent Box Drawing
-                        //Outlines will need to be scaled based on distance to camera
-                        var matrix = parent.WorldMatrix;
-                        var camerapos = Session.Camera.Position;
+                            MySimpleObjectDraw.DrawLine(edgeDrawLine.From, edgeDrawLine.From + dirToPlayer, MyStringId.GetOrCompute("square"), ref colorEnemy, 0.0005f, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                            offscreen = true;
+                        }
 
 
-                        //smushes boxes to align to current camera pos, has some popping effect for close stuff
-                        var dirFromCam = Vector3D.Normalize(position - camerapos); 
-                        //var dirFromCam = Vector3D.Normalize(position - playerPos); //Aligns well when in cockpit
-                        matrix.SetDirectionVector(matrix.GetClosestDirection(dirFromCam), dirFromCam);//Squares up the matrices to align to camera view direction
-                        var offset = new Vector3D(5, 5, 5);
-                        BoundingBoxD box = new BoundingBoxD(parent.PositionComp.LocalAABB.Min - offset, parent.PositionComp.LocalAABB.Max + offset);
-                        var color = Color.Red;
-                        MySimpleObjectDraw.DrawTransparentBox(ref matrix, ref box, ref color, MySimpleObjectRasterizer.Wireframe, 1, 0.1f, null, MyStringId.GetOrCompute("GizmoDrawLineRed"), false, -1, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop, 5);
-                        #endregion
+                        if (s.enableLines)
+                        {
+                            //Line to target from player pos
+                            var dirToTarg = Vector3D.Normalize(position - playerPos);
+                            var lineLength = 100 + controlledGrid.PositionComp.LocalVolume.Radius;
+                            var lineOffset = controlledGrid.PositionComp.LocalVolume.Radius * 1.1;
+                            MySimpleObjectDraw.DrawLine(playerPos + dirToTarg * lineOffset, playerPos + dirToTarg * lineLength, particle, ref colorEnemy, 1, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                        }
+
+                        if (s.enableSymbols && !offscreen)
+                        {
+                            var size = parent.PositionComp.LocalVolume.Radius;
+                            var rangeScaledSize = (float)Vector3D.Distance(Session.Camera.Position, position) / 300;
+                            var camMat = MyAPIGateway.Session.Camera.WorldMatrix;
+                            var symLen = 6 * rangeScaledSize;
+                            var texture = MyStringId.GetOrCompute("particle_laser");
+                            //Corners
+                            var targTopLeft = position + camMat.Up * size + camMat.Left * size;
+                            var targTopRight = position + camMat.Up * size + camMat.Right * size;
+                            var targBotLeft = position + camMat.Down * size + camMat.Left * size;
+                            var targBotRight = position + camMat.Down * size + camMat.Right * size;
+
+                            MySimpleObjectDraw.DrawLine(targTopLeft, targTopLeft + camMat.Right * symLen, texture, ref colorEnemy, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                            MySimpleObjectDraw.DrawLine(targTopLeft, targTopLeft + camMat.Down * symLen, texture, ref colorEnemy, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+
+                            MySimpleObjectDraw.DrawLine(targTopRight, targTopRight + camMat.Left * symLen, texture, ref colorEnemy, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                            MySimpleObjectDraw.DrawLine(targTopRight, targTopRight + camMat.Down * symLen, texture, ref colorEnemy, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+
+                            MySimpleObjectDraw.DrawLine(targBotLeft, targBotLeft + camMat.Right * symLen, texture, ref colorEnemy, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                            MySimpleObjectDraw.DrawLine(targBotLeft, targBotLeft + camMat.Up * symLen, texture, ref colorEnemy, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+
+                            MySimpleObjectDraw.DrawLine(targBotRight, targBotRight + camMat.Left * symLen, texture, ref colorEnemy, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                            MySimpleObjectDraw.DrawLine(targBotRight, targBotRight + camMat.Up * symLen, texture, ref colorEnemy, rangeScaledSize, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                        }
+
                     }
                 }
             }
