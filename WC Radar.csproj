@@ -146,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\Scripts\WCRadar\CoreSystemsApiBase.cs" />
+    <Compile Include="Data\Scripts\WCRadar\HudAPIv2.cs" />
     <Compile Include="Data\Scripts\WCRadar\Settings.cs" />
     <Compile Include="Data\Scripts\WCRadar\WCRadar.cs" />
   </ItemGroup>
