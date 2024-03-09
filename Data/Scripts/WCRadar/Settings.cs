@@ -38,6 +38,7 @@ namespace WCRadar
             enableMissileLines = false,
             missileColor = Color.Yellow,
             neutralColor = Color.LightGray,
+            friendlyColor = Color.Green,
             enableMissileOffScreen = true,
             enableThreatOffScreen = true,
             enableObstructionOffScreen = false,
@@ -115,6 +116,8 @@ namespace WCRadar
         public Color rwrColor { get; set; }
         [ProtoMember(32)]
         public bool showObsLabel { get; set; }
+        [ProtoMember(33)]
+        public Color friendlyColor { get; set; }
 
     }
     [ProtoContract]
@@ -234,6 +237,7 @@ namespace WCRadar
             try
             {
                 if (settings.neutralColor.PackedValue == 0) settings.neutralColor = Color.LightGray;
+                if (settings.friendlyColor.PackedValue == 0) settings.friendlyColor = Color.Green;
                 if (settings.OffScreenIndicatorLen == 0 || settings.OffScreenIndicatorLen == 0.05f) settings.OffScreenIndicatorLen = 0.15f;
                 if (settings.OffScreenIndicatorThick == 0 || settings.OffScreenIndicatorThick == 0.0003f) settings.OffScreenIndicatorThick = 0.01f;
                 if (settings.rwrDisplayTimeTicks == 0) settings.rwrDisplayTimeTicks = Settings.Default.rwrDisplayTimeTicks;
@@ -262,7 +266,7 @@ namespace WCRadar
         HudAPIv2.MenuItem RWREnable;
 
         HudAPIv2.MenuTextInput ObstructionRange, MissileText, OffscreenLength, OffscreenWidth, HideLabelThreshold, RWRTime;
-        HudAPIv2.MenuColorPickerInput EnemyColor, ObsColor, MissileColor, NeutralColor, RWRColor;
+        HudAPIv2.MenuColorPickerInput EnemyColor, ObsColor, MissileColor, NeutralColor, FriendlyColor, RWRColor;
         
         private void InitMenu()//callback
         {
@@ -283,9 +287,10 @@ namespace WCRadar
             LineEnableObs = new HudAPIv2.MenuItem("Show lines: " + Settings.Instance.enableLinesObs, ObstructionMenu, ShowLinesObs);
             SymbolEnableObs = new HudAPIv2.MenuItem("Show symbols: " + Settings.Instance.enableSymbolsObs, ObstructionMenu, ShowSymbolsObs);
             LabelEnableObs = new HudAPIv2.MenuItem("Show labels: " + Settings.Instance.enableLabelsObs, ObstructionMenu, ShowLabelsObs);
-            ObstructionEnable = new HudAPIv2.MenuItem("Show non-enemy grids: " + Settings.Instance.enableObstructions, ObstructionMenu, ShowObstructions);
+            ObstructionEnable = new HudAPIv2.MenuItem("Show friendlies: " + Settings.Instance.enableObstructions, ObstructionMenu, ShowObstructions);
             AsteroidEnable = new HudAPIv2.MenuItem("Show asteroids: " + Settings.Instance.enableAsteroids, ObstructionMenu, ShowAsteroids);
             ObstructionRange = new HudAPIv2.MenuTextInput("Hide obstructions beyond: " + Settings.Instance.suppressObstructionDist + "m", ObstructionMenu, "Enter a value", HideObstructions);
+            FriendlyColor = new HudAPIv2.MenuColorPickerInput("Set friendly color >>", ObstructionMenu, Settings.Instance.friendlyColor, "Select color", ChangeFriendlyColor);
             ObsColor = new HudAPIv2.MenuColorPickerInput("Set obstruction color >>", ObstructionMenu, Settings.Instance.obsColor, "Select color", ChangeObsColor);
 
             MissileMenu = new HudAPIv2.MenuSubCategory("Missile Display Options >>", SettingsMenu, "Missile Options");
@@ -398,6 +403,10 @@ namespace WCRadar
         {
             Settings.Instance.neutralColor = obj;
         }
+        private void ChangeFriendlyColor(Color obj)
+        {
+            Settings.Instance.friendlyColor = obj;
+        }
         private void ChangeObsColor(Color obj)
         {
             Settings.Instance.obsColor = obj;
@@ -459,7 +468,7 @@ namespace WCRadar
         private void ShowObstructions()
         {
             Settings.Instance.enableObstructions = !Settings.Instance.enableObstructions;
-            ObstructionEnable.Text = "Show non-enemy grids: " + Settings.Instance.enableObstructions;
+            ObstructionEnable.Text = "Show friendlies: " + Settings.Instance.enableObstructions;
         }
         private void ShowAsteroids()
         {

@@ -110,6 +110,7 @@ namespace WCRadar
             var newGrid = newEnt?.Entity?.GetTopMostParent() as MyCubeGrid;
             //controlledGrid = newGrid;
             threatList.Clear();
+            threatListEnt.Clear();
             obsList.Clear();
             threatListCleaned.Clear();
             obsListCleaned.Clear();
@@ -342,6 +343,7 @@ namespace WCRadar
             ICollection<MyEntity> ListChecked = new List<MyEntity>();
             ICollection<MyEntity> ListTemp = new List<MyEntity>();
             var playerID = MyAPIGateway.Session.Player.IdentityId;
+            var playerFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(playerID);
 
             foreach (var obj in list)
             {
@@ -374,6 +376,7 @@ namespace WCRadar
                     IMyFaction faction = null;
                     var factionTag = "";
                     bool enemy = false;
+                    bool friendly = false;
 
                     var objGrid = obj as MyCubeGrid;
                     if (objGrid == null)//Characters?
@@ -384,21 +387,28 @@ namespace WCRadar
                         faction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(character.ControllerInfo.ControllingIdentityId);
                         if (faction != null)
                         {
-                            //factionTag = faction.Tag;
-                            //enemy = faction.IsEnemy(playerID);
-                            enemy = MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, faction.FactionId) < -500;
+                            var reputation = MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, faction.FactionId);
+                            if (playerFaction == faction)
+                            {
+                                friendly = true;
+                            }
+                            else
+                            {
+                                enemy = reputation < -500;
+                                friendly = reputation > 500;
+                            }
                         }
                         else
                         {
-                            //factionTag = "NONE";
                             enemy = true;
                         }
                         contactChar.entity = obj;
                         contactChar.enemy = enemy;
+                        contactChar.friendly = friendly;
                         ListCleaned.Add(contactChar);
                         continue;
                     }
-                    else if (!isThreat && !Settings.Instance.enableObstructions)
+                    else if (!Settings.Instance.enableObstructions)
                         continue;
 
                     MyEntity addEnt = obj;
@@ -446,7 +456,16 @@ namespace WCRadar
                         if (faction != null)
                         {
                             factionTag = faction.Tag;
-                            enemy = MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, faction.FactionId) < -500;
+                            var reputation = MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, faction.FactionId);
+                            if (playerFaction == faction)
+                            {
+                                friendly = true;
+                            }
+                            else
+                            {
+                                enemy = reputation < -500;
+                                friendly = reputation > 500;
+                            }
                         }
                         else
                         {
@@ -460,9 +479,8 @@ namespace WCRadar
                     contact.noPower = noPowerFound;
                     contact.factionTag = factionTag;
                     contact.enemy = enemy;
-                    contact.blockCount = gridMy.BlocksCount;
-
-
+                    contact.friendly = friendly;
+                    contact.blockCount = gridMy.BlocksCount;                        
                     ListCleaned.Add(contact);
                 }
                 catch (Exception e)
@@ -585,11 +603,11 @@ namespace WCRadar
                                     topRightScreen = new Vector3D(screenCoords.X + symbolWidth * 0.5, screenCoords.Y + symbolWidth, screenCoords.Z);
 
                                 if (s.enableObstructionOffScreen && offscreen && Vector3D.DistanceSquared(position, controlledGrid.PositionComp.WorldAABB.Center) >= 90000)
-                                    DrawScreenEdge(screenCoords, s.obsColor);
+                                    DrawScreenEdge(screenCoords, obs.friendly ? s.friendlyColor.ToVector4() : s.obsColor.ToVector4());
                                 if (s.enableSymbolsObs && !offscreen)
-                                    DrawFrame(topRightScreen, screenCoords, s.obsColor);
+                                    DrawFrame(topRightScreen, screenCoords, obs.friendly ? s.friendlyColor.ToVector4() : s.obsColor.ToVector4());
                                 if (s.enableLinesObs)
-                                    DrawLine(position, line, s.obsColor);
+                                    DrawLine(position, line, obs.friendly ? s.friendlyColor.ToVector4() : s.obsColor.ToVector4());
 
                                 if (s.enableCollisionWarning && controlledGrid.LinearVelocity.LengthSquared() > 10) //TODO take a look at dampening these messages or intermittently flash them?
                                 {
@@ -605,7 +623,7 @@ namespace WCRadar
                                     var parentGrid = parent as MyCubeGrid;
                                     if (hudAPI.Heartbeat)
                                     {
-                                        DrawLabel(parentGrid, position, parent, obsSize, s.obsColor, false, "", obs.noPower, new Vector2D(topRightScreen.X, topRightScreen.Y));
+                                        DrawLabel(parentGrid, position, parent, obsSize, obs.friendly ? s.friendlyColor.ToVector4() : s.obsColor.ToVector4(), false, "", obs.noPower, new Vector2D(topRightScreen.X, topRightScreen.Y));
                                     }
                                 }
                             }
@@ -815,6 +833,7 @@ namespace WCRadar
             {
                 rwrDict.Clear();
                 threatList.Clear();
+                threatListEnt.Clear();
                 obsList.Clear();
                 threatListCleaned.Clear();
                 obsListCleaned.Clear();
@@ -858,6 +877,7 @@ namespace WCRadar
             internal MyEntity entity = null;
             internal bool noPower = false;
             internal bool enemy = false;
+            internal bool friendly = false;
             internal string factionTag = "";
             internal int blockCount = 0;
         }
