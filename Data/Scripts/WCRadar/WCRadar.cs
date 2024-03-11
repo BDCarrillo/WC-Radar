@@ -34,7 +34,7 @@ namespace WCRadar
         internal bool serverSuppress = false;
         internal bool serverSuppressRWR = false;
 
-        internal bool registeredController = false;
+        internal static bool registeredController = false;
         internal MyCubeBlock trackedBlock = null;
         internal MyCubeBlock trackedRWRBlock = null;
 
@@ -855,7 +855,10 @@ namespace WCRadar
                 MyAPIGateway.Utilities.MessageEnteredSender -= OnMessageEnteredSender;
                 MyLog.Default.WriteLineAndConsole($"WC Radar: Deregistered MessageEnteredSender");
                 if (registeredController)
+                {
                     MyAPIGateway.Session.Player.Controller.ControlledEntityChanged -= GridChange;
+                    registeredController = false;
+                }
                 MyLog.Default.WriteLineAndConsole($"WC Radar: Deregistered ControlledEntityChanged");
 
                 /*

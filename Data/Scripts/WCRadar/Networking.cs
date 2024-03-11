@@ -195,7 +195,7 @@ namespace Digi.Example_NetworkProtobuf
             if (!MyAPIGateway.Utilities.IsDedicated) //client crap
             {
                 MyLog.Default.WriteLineAndConsole($"WC Radar: Received packet");
-
+                Session.registeredController = false;
                 try
                 {
                     bool display = false;
