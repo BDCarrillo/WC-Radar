@@ -273,8 +273,7 @@ namespace WCRadar
 
                     if (!Settings.Instance.rwrDisable && !serverSuppressRWR)
                     {
-                        var tempDict = rwrDict;
-                        foreach (var rwr in tempDict)
+                        foreach (var rwr in rwrDict.ToArray())
                         {
                             if (rwr.Key == null || rwr.Key.Closed || rwr.Key.MarkedForClose)
                                 rwrDict.Remove(rwr.Key);
