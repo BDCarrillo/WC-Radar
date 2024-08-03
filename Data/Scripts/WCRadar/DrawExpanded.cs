@@ -1,20 +1,11 @@
 ﻿using Sandbox.ModAPI;
 using VRage.Game.Components;
 using VRageMath;
-using Sandbox.Game.Entities;
 using VRage.Game;
 using VRage.Utils;
 using System;
-using CoreSystems.Api;
-using System.Collections.Generic;
-using VRage;
-using VRage.Game.Entity;
-using VRage.Game.ModAPI;
 using Draygo.API;
 using System.Text;
-using Sandbox.Game.EntityComponents;
-using Digi.Example_NetworkProtobuf;
-using Sandbox.Game;
 using VRage.Collections;
 
 namespace WCRadar
@@ -26,11 +17,8 @@ namespace WCRadar
         {
             var viewProjectionMat = Session.Camera.ViewMatrix * Session.Camera.ProjectionMatrix;
             var worldProjectionMat = MatrixD.Invert(viewProjectionMat);
-            var camMat = Session.Camera.WorldMatrix;
             try
             {
-                if (hide) return;
-
                 var s = Settings.Instance;
 
                 if (controlledGrid != null && !controlledGrid.MarkedForClose)
@@ -208,20 +196,7 @@ namespace WCRadar
             //Mini frame draw
             var ctrSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, mark.screenCoordsCtr, mark.color, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: 0, HideHud: true, Shadowing: true);
         }
-        internal class expandedMark
-        {
-            internal Color color;
-            internal string label;
-            internal Vector2D screenCoordsCtr;
-            internal Vector2D topRight;
-            internal Vector2D textBottomRight;
-            internal Vector2D textTopLeft;
-            internal Vector2D leadLine;
-            internal Vector3D worldCtr;
-            internal double screenCoordsZ;
-        }
     }
-
 }
 
 

@@ -4,8 +4,8 @@ using ProtoBuf;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
+using VRage.Input;
 using VRage.Utils;
 using VRageMath;
 
@@ -48,77 +48,78 @@ namespace WCRadar
             rwrDisable = false,
             rwrDisplayTimeTicks = 180,
             rwrColor = Color.Yellow,
-            
+            speedRel = true,
+
         };
 
         [ProtoMember(1)]
-        public bool enableLinesThreat { get; set; }
+        public bool enableLinesThreat { get; set; } = false;
         [ProtoMember(2)]
-        public bool enableSymbolsThreat{ get; set; }
+        public bool enableSymbolsThreat{ get; set; } = true;
         [ProtoMember(3)]
-        public bool enableObstructions { get; set; }
+        public bool enableObstructions { get; set; } = true;
         [ProtoMember(4)]
-        public bool enableAsteroids { get; set; }
+        public bool enableAsteroids { get; set; } = false;
         [ProtoMember(5)]
-        public bool enableCollisionWarning { get; set; }
+        public bool enableCollisionWarning { get; set; } = false;
         [ProtoMember(6)]
-        public bool enableMissileWarning { get; set; }
+        public bool enableMissileWarning { get; set; } = true;
         [ProtoMember(7)]
-        public string missileWarningText { get; set; }
+        public string missileWarningText { get; set; } = "Fast Movers Inbound";
         [ProtoMember(8)]
-        public bool enableLabelsThreat { get; set; }
+        public bool enableLabelsThreat { get; set; } = true;
         [ProtoMember(9)]
-        public bool suppressSubgrids { get; set; }
+        public bool suppressSubgrids { get; set; } = true;
         [ProtoMember(10)]
-        public bool showFactionThreat { get; set; }
+        public bool showFactionThreat { get; set; } = true;
         [ProtoMember(11)]
-        public int suppressObstructionDist { get; set; }
+        public int suppressObstructionDist { get; set; } = 20000;
         [ProtoMember(12)]
-        public bool enableLinesObs { get; set; }
+        public bool enableLinesObs { get; set; } = false;
         [ProtoMember(13)]
-        public bool enableSymbolsObs { get; set; }
+        public bool enableSymbolsObs { get; set; } = true;
         [ProtoMember(14)]
-        public bool enableLabelsObs { get; set; }
+        public bool enableLabelsObs { get; set; } = true;
         [ProtoMember(15)]
-        public bool hideUnpowered { get; set; }
+        public bool hideUnpowered { get; set; } = false;
         [ProtoMember(16)]
-        public Color enemyColor { get; set; }
+        public Color enemyColor { get; set; } = Color.Red;
         [ProtoMember(17)]
-        public Color obsColor { get; set; }
+        public Color obsColor { get; set; } = Color.Goldenrod;
         [ProtoMember(18)]
-        public bool enableMissileSymbols { get; set; }
+        public bool enableMissileSymbols { get; set; } = true;
         [ProtoMember(19)]
-        public bool enableMissileLines { get; set; }
+        public bool enableMissileLines { get; set; } = false;
         [ProtoMember(20)]
-        public Color missileColor { get; set; }
+        public Color missileColor { get; set; } = Color.Yellow;
         [ProtoMember(21)]
-        public Color neutralColor { get; set; }
+        public Color neutralColor { get; set; } = Color.LightGray;
         [ProtoMember(22)]
-        public bool enableThreatOffScreen { get; set; }
+        public bool enableThreatOffScreen { get; set; } = true;
         [ProtoMember(23)]
-        public bool enableObstructionOffScreen { get; set; }
+        public bool enableObstructionOffScreen { get; set; } = true;
         [ProtoMember(24)]
-        public bool enableMissileOffScreen { get; set; }
+        public bool enableMissileOffScreen { get; set; } = true;
         [ProtoMember(25)]
-        public float OffScreenIndicatorLen { get; set; }
+        public float OffScreenIndicatorLen { get; set; } = 0.15f;
         [ProtoMember(26)]
-        public float OffScreenIndicatorThick { get; set; }
+        public float OffScreenIndicatorThick { get; set; } = 0.01f;
         [ProtoMember(27)]
-        public int hideLabelBlockThreshold { get; set; }
+        public int hideLabelBlockThreshold { get; set; } = 20;
         [ProtoMember(28)]
-        public bool hideName { get; set; }
+        public bool hideName { get; set; } = false;
         [ProtoMember(29)]
-        public bool rwrDisable { get; set; }
-
+        public bool rwrDisable { get; set; } = false;
         [ProtoMember(30)]
-        public int rwrDisplayTimeTicks { get; set; }
+        public int rwrDisplayTimeTicks { get; set; } = 180;
         [ProtoMember(31)]
-        public Color rwrColor { get; set; }
+        public Color rwrColor { get; set; } = Color.Yellow;
         [ProtoMember(32)]
-        public bool showObsLabel { get; set; }
+        public bool showObsLabel { get; set; } = false;
         [ProtoMember(33)]
-        public Color friendlyColor { get; set; }
-
+        public Color friendlyColor { get; set; } = Color.Green;
+        [ProtoMember(34)]
+        public bool speedRel { get; set; } = true ;
     }
     [ProtoContract]
     public class ServerSettings
@@ -211,9 +212,21 @@ namespace WCRadar
                     TextReader reader = MyAPIGateway.Utilities.ReadFileInLocalStorage(Filename, typeof(Settings));
                     string text = reader.ReadToEnd();
                     reader.Close();
-                    s = MyAPIGateway.Utilities.SerializeFromXML<Settings>(text);
-                    Save(s);
-                    localCfg = true;
+
+                    if (text.Length == 0) //Corner case catch of a blank Config.cfg
+                    {
+                        MyAPIGateway.Utilities.ShowMessage("WC Radar", "Error with config file, overwriting with default.");
+                        MyLog.Default.Error($"WC Radar: Error with config file, overwriting with default");
+                        Settings.Instance = Settings.Default;
+                        s = Settings.Default;
+                        Save(s);
+                    }
+                    else
+                    {
+                        s = MyAPIGateway.Utilities.SerializeFromXML<Settings>(text);
+                        Save(s);
+                        localCfg = true;
+                    }
                 }
                 else //Default/initial client cfg
                 {
@@ -228,7 +241,6 @@ namespace WCRadar
                 Save(s);
                 MyAPIGateway.Utilities.ShowMessage("WC Radar", "Error with config file, overwriting with default." + e);
                 MyLog.Default.Error($"WC Radar: Error with config file, overwriting with default {e}");
-
             }
         }
         public void Save(Settings settings)
@@ -263,7 +275,7 @@ namespace WCRadar
         HudAPIv2.MenuItem LineEnableThreat, SymbolEnableThreat, LabelEnableThreat, ObstructionEnable, AsteroidEnable, CollisionEnable, MissileEnable, SuppressSubgrid, ShowFactionThreat, HideName;
         HudAPIv2.MenuItem LineEnableObs, SymbolEnableObs, LabelEnableObs, HideUnpowered, Reset, ServerReset, Blank, ResetConfirm;
         HudAPIv2.MenuItem LineEnableMissile, SymbolEnableMissile, OffscreenMissileEnable, OffscreenThreatEnable, OffscreenObstructionEnable;
-        HudAPIv2.MenuItem RWREnable;
+        HudAPIv2.MenuItem RWREnable, SpeedSetting;
 
         HudAPIv2.MenuTextInput ObstructionRange, MissileText, OffscreenLength, OffscreenWidth, HideLabelThreshold, RWRTime;
         HudAPIv2.MenuColorPickerInput EnemyColor, ObsColor, MissileColor, NeutralColor, FriendlyColor, RWRColor;
@@ -272,46 +284,42 @@ namespace WCRadar
         {
             SettingsMenu = new HudAPIv2.MenuRootCategory("WC Radar", HudAPIv2.MenuRootCategory.MenuFlag.PlayerMenu, "WC Radar Settings");
             ThreatMenu = new HudAPIv2.MenuSubCategory("Threat Display Options >>", SettingsMenu, "Threat Options");
-
-            LineEnableThreat = new HudAPIv2.MenuItem("Show lines: " + Settings.Instance.enableLinesThreat, ThreatMenu, ShowLinesThreat);
-            SymbolEnableThreat = new HudAPIv2.MenuItem("Show symbols: " + Settings.Instance.enableSymbolsThreat, ThreatMenu, ShowSymbolsThreat);
-            LabelEnableThreat = new HudAPIv2.MenuItem("Show labels: " + Settings.Instance.enableLabelsThreat, ThreatMenu, ShowLabelsThreat);
-            ShowFactionThreat = new HudAPIv2.MenuItem("Show faction on label: " + Settings.Instance.showFactionThreat, ThreatMenu, ShowFactionOnThreat);
-
-            EnemyColor = new HudAPIv2.MenuColorPickerInput("Set enemy color >>", ThreatMenu, Settings.Instance.enemyColor, "Select color", ChangeEnemyColor);
-            NeutralColor = new HudAPIv2.MenuColorPickerInput("Set neutral color >>", ThreatMenu, Settings.Instance.neutralColor, "Select color", ChangeNeutralColor);
+                LineEnableThreat = new HudAPIv2.MenuItem("Show lines: " + Settings.Instance.enableLinesThreat, ThreatMenu, ShowLinesThreat);
+                SymbolEnableThreat = new HudAPIv2.MenuItem("Show symbols: " + Settings.Instance.enableSymbolsThreat, ThreatMenu, ShowSymbolsThreat);
+                LabelEnableThreat = new HudAPIv2.MenuItem("Show labels: " + Settings.Instance.enableLabelsThreat, ThreatMenu, ShowLabelsThreat);
+                ShowFactionThreat = new HudAPIv2.MenuItem("Show faction on label: " + Settings.Instance.showFactionThreat, ThreatMenu, ShowFactionOnThreat);
+                EnemyColor = new HudAPIv2.MenuColorPickerInput("Set enemy color >>", ThreatMenu, Settings.Instance.enemyColor, "Select color", ChangeEnemyColor);
+                NeutralColor = new HudAPIv2.MenuColorPickerInput("Set neutral color >>", ThreatMenu, Settings.Instance.neutralColor, "Select color", ChangeNeutralColor);
+                SpeedSetting = new HudAPIv2.MenuItem("Velocity shown as: " + (Settings.Instance.speedRel ? "Relative" : "Absolute"), ThreatMenu, ChangeSpeedType);
 
             ObstructionMenu = new HudAPIv2.MenuSubCategory("Obstruction Display Options >>", SettingsMenu, "Obstruction Options");
-
-
-            LineEnableObs = new HudAPIv2.MenuItem("Show lines: " + Settings.Instance.enableLinesObs, ObstructionMenu, ShowLinesObs);
-            SymbolEnableObs = new HudAPIv2.MenuItem("Show symbols: " + Settings.Instance.enableSymbolsObs, ObstructionMenu, ShowSymbolsObs);
-            LabelEnableObs = new HudAPIv2.MenuItem("Show labels: " + Settings.Instance.enableLabelsObs, ObstructionMenu, ShowLabelsObs);
-            ObstructionEnable = new HudAPIv2.MenuItem("Show friendlies: " + Settings.Instance.enableObstructions, ObstructionMenu, ShowObstructions);
-            AsteroidEnable = new HudAPIv2.MenuItem("Show asteroids: " + Settings.Instance.enableAsteroids, ObstructionMenu, ShowAsteroids);
-            ObstructionRange = new HudAPIv2.MenuTextInput("Hide obstructions beyond: " + Settings.Instance.suppressObstructionDist + "m", ObstructionMenu, "Enter a value", HideObstructions);
-            FriendlyColor = new HudAPIv2.MenuColorPickerInput("Set friendly color >>", ObstructionMenu, Settings.Instance.friendlyColor, "Select color", ChangeFriendlyColor);
-            ObsColor = new HudAPIv2.MenuColorPickerInput("Set obstruction color >>", ObstructionMenu, Settings.Instance.obsColor, "Select color", ChangeObsColor);
+                LineEnableObs = new HudAPIv2.MenuItem("Show lines: " + Settings.Instance.enableLinesObs, ObstructionMenu, ShowLinesObs);
+                SymbolEnableObs = new HudAPIv2.MenuItem("Show symbols: " + Settings.Instance.enableSymbolsObs, ObstructionMenu, ShowSymbolsObs);
+                LabelEnableObs = new HudAPIv2.MenuItem("Show labels: " + Settings.Instance.enableLabelsObs, ObstructionMenu, ShowLabelsObs);
+                ObstructionEnable = new HudAPIv2.MenuItem("Show friendlies: " + Settings.Instance.enableObstructions, ObstructionMenu, ShowObstructions);
+                AsteroidEnable = new HudAPIv2.MenuItem("Show asteroids: " + Settings.Instance.enableAsteroids, ObstructionMenu, ShowAsteroids);
+                ObstructionRange = new HudAPIv2.MenuTextInput("Hide obstructions beyond: " + Settings.Instance.suppressObstructionDist + "m", ObstructionMenu, "Enter a value", HideObstructions);
+                FriendlyColor = new HudAPIv2.MenuColorPickerInput("Set friendly color >>", ObstructionMenu, Settings.Instance.friendlyColor, "Select color", ChangeFriendlyColor);
+                ObsColor = new HudAPIv2.MenuColorPickerInput("Set obstruction color >>", ObstructionMenu, Settings.Instance.obsColor, "Select color", ChangeObsColor);
 
             MissileMenu = new HudAPIv2.MenuSubCategory("Missile Display Options >>", SettingsMenu, "Missile Options");
-            LineEnableMissile = new HudAPIv2.MenuItem("Show lines: " + Settings.Instance.enableMissileLines, MissileMenu, ShowLinesMissile);
-            SymbolEnableMissile = new HudAPIv2.MenuItem("Show symbols: " + Settings.Instance.enableMissileSymbols, MissileMenu, ShowSymbolsMissile);
-            MissileColor = new HudAPIv2.MenuColorPickerInput("Set missile color >>", MissileMenu, Settings.Instance.missileColor, "Select color", ChangeMissileColor);
-            MissileEnable = new HudAPIv2.MenuItem("Show missile warning: " + Settings.Instance.enableMissileWarning, MissileMenu, ShowMissile);
-            MissileText = new HudAPIv2.MenuTextInput("Missile warning: " + Settings.Instance.missileWarningText, MissileMenu, "Enter new missile warning message", MissileWarning);
-
+                LineEnableMissile = new HudAPIv2.MenuItem("Show lines: " + Settings.Instance.enableMissileLines, MissileMenu, ShowLinesMissile);
+                SymbolEnableMissile = new HudAPIv2.MenuItem("Show symbols: " + Settings.Instance.enableMissileSymbols, MissileMenu, ShowSymbolsMissile);
+                MissileColor = new HudAPIv2.MenuColorPickerInput("Set missile color >>", MissileMenu, Settings.Instance.missileColor, "Select color", ChangeMissileColor);
+                MissileEnable = new HudAPIv2.MenuItem("Show missile warning: " + Settings.Instance.enableMissileWarning, MissileMenu, ShowMissile);
+                MissileText = new HudAPIv2.MenuTextInput("Missile warning: " + Settings.Instance.missileWarningText, MissileMenu, "Enter new missile warning message", MissileWarning);
 
             OffscreenMenu = new HudAPIv2.MenuSubCategory("Offscreen Indicator Options >", SettingsMenu, "Offscreen Indicators");
-            OffscreenThreatEnable = new HudAPIv2.MenuItem("Show for threats: " + Settings.Instance.enableThreatOffScreen, OffscreenMenu, ShowOffscreenThreat);
-            OffscreenObstructionEnable = new HudAPIv2.MenuItem("Show for obstructions: " + Settings.Instance.enableObstructionOffScreen, OffscreenMenu, ShowOffscreenObstruction);
-            OffscreenMissileEnable = new HudAPIv2.MenuItem("Show for missiles: " + Settings.Instance.enableMissileOffScreen, OffscreenMenu, ShowOffscreenMissile);
-            OffscreenLength = new HudAPIv2.MenuTextInput("Indicator length (edge toward camera) " + Settings.Instance.OffScreenIndicatorLen, OffscreenMenu, "Enter indicator length.  Default is 0.15", ChangeIndicatorLength);
-            OffscreenWidth = new HudAPIv2.MenuTextInput("Indicator thickness " + Settings.Instance.OffScreenIndicatorThick, OffscreenMenu, "Enter indicator thickness.  Default is 0.01", ChangeIndicatorThickness);
+                OffscreenThreatEnable = new HudAPIv2.MenuItem("Show for threats: " + Settings.Instance.enableThreatOffScreen, OffscreenMenu, ShowOffscreenThreat);
+                OffscreenObstructionEnable = new HudAPIv2.MenuItem("Show for obstructions: " + Settings.Instance.enableObstructionOffScreen, OffscreenMenu, ShowOffscreenObstruction);
+                OffscreenMissileEnable = new HudAPIv2.MenuItem("Show for missiles: " + Settings.Instance.enableMissileOffScreen, OffscreenMenu, ShowOffscreenMissile);
+                OffscreenLength = new HudAPIv2.MenuTextInput("Indicator length (edge toward camera) " + Settings.Instance.OffScreenIndicatorLen, OffscreenMenu, "Enter indicator length.  Default is 0.15", ChangeIndicatorLength);
+                OffscreenWidth = new HudAPIv2.MenuTextInput("Indicator thickness " + Settings.Instance.OffScreenIndicatorThick, OffscreenMenu, "Enter indicator thickness.  Default is 0.01", ChangeIndicatorThickness);
 
             RWR = new HudAPIv2.MenuSubCategory("Lock On Warning Options >>", SettingsMenu, "Warning for grids locked on to you");
-            RWREnable = new HudAPIv2.MenuItem("Disable Warning: " + Settings.Instance.rwrDisable, RWR, RWRToggle);
-            RWRTime = new HudAPIv2.MenuTextInput("New Warning Display Time: " + Settings.Instance.rwrDisplayTimeTicks + " ticks", RWR, "Enter new display time in ticks (60 per second)", ChangeRWRTime);
-            RWRColor = new HudAPIv2.MenuColorPickerInput("Set Warning color >>", RWR, Settings.Instance.rwrColor, "Select color", ChangeRWRColor);
+                RWREnable = new HudAPIv2.MenuItem("Disable Warning: " + Settings.Instance.rwrDisable, RWR, RWRToggle);
+                RWRTime = new HudAPIv2.MenuTextInput("New Warning Display Time: " + Settings.Instance.rwrDisplayTimeTicks + " ticks", RWR, "Enter new display time in ticks (60 per second)", ChangeRWRTime);
+                RWRColor = new HudAPIv2.MenuColorPickerInput("Set Warning color >>", RWR, Settings.Instance.rwrColor, "Select color", ChangeRWRColor);
 
 
 
@@ -329,10 +337,13 @@ namespace WCRadar
             ResetServerConfirm = new HudAPIv2.MenuSubCategory("Reset to server defaults (if any)", SettingsMenu, "Confirm");
             if (!MyAPIGateway.Multiplayer.MultiplayerActive) ResetServerConfirm.Interactable = false;
             ServerReset = new HudAPIv2.MenuItem("Reset to server default (if any)", ResetServerConfirm, ResetServerDefaults);
-
-
         }
 
+        private void ChangeSpeedType()
+        {
+            Settings.Instance.speedRel = !Settings.Instance.speedRel;
+            SpeedSetting.Text = "Velocity shown as: " + (Settings.Instance.speedRel ? "Relative" : "Absolute");
+        }
         private void ChangeRWRTime(string obj)
         {
             int getter;
@@ -340,14 +351,12 @@ namespace WCRadar
                 return;
             Settings.Instance.rwrDisplayTimeTicks = getter;
             RWRTime.Text = "New Warning Display Time: " + Settings.Instance.rwrDisplayTimeTicks + " ticks";
-        }
-        private void RWRToggle()
+        }        private void RWRToggle()
         {
             Settings.Instance.rwrDisable = !Settings.Instance.rwrDisable;
             RWREnable.Text = "Disable Radar Warning: " + Settings.Instance.rwrDisable;
             rwrDict.Clear();
         }
-
 
         private void ResetDefaults()
         {
