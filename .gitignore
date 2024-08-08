@@ -3,3 +3,9 @@
 *.vsidx
 /.vs
 *.cache
+/.vs
+.vs/WC Radar/v17/.suo
+*.dll
+*.pdb
+*.cache
+/obj

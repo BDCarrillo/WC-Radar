@@ -33,7 +33,6 @@ namespace WCRadar
                     MyAPIGateway.Session.Player.Controller.ControlledEntityChanged += GridChange;
                     registeredController = true;
                     MyLog.Default.WriteLineAndConsole($"WC Radar: Registered ControlledEntityChanged in BeforeStart");
-
                 }
                 catch
                 { }               
@@ -42,7 +41,7 @@ namespace WCRadar
                 wcAPi.Load();
                 hudAPI = new HudAPIv2(InitMenu);
                 if (!wcAPi.IsReady)
-                    /* //Anti Spam
+                    /* //Removed to cut down on chat spam
                     if(serverEnforcement || serverRWREnforcement)
                         MyAPIGateway.Utilities.ShowMessage("WC Radar", "Overlay requires a certain type of block set by the server.  Overlay options can be found by hitting enter and F2");
                     else
@@ -89,12 +88,21 @@ namespace WCRadar
                     }
 
                 }
-                if (!hide && MyAPIGateway.Session.Config.HudState != 0)
+                if (!hide && MyAPIGateway.Session.Config.HudState != 0 && hudAPI.Heartbeat)
                 {
-                    if (controlledGrid != null && MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Control))
-                        ExpandedDraw();
-                    else
-                        ProcessDraws();
+                    var s = Settings.Instance;
+                    if (projInbound.Item1 && (s.enableMissileLines || s.enableMissileSymbols || s.enableMissileWarning))
+                        DrawMissile();
+                    if (threatListCleaned.Count > 0 || (obsListCleaned.Count > 0 && s.enableObstructions))
+                    {
+                        if (MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Control))
+                            ExpandedDraw();
+                        else
+                            ProcessDraws();
+                    }
+
+                    if (s.showRollup && rollupText != null)
+                        RollupData();
                 }
                 tick++;                
             }

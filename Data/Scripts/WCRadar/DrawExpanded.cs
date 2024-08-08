@@ -31,35 +31,6 @@ namespace WCRadar
                     }
                     var playerPos = controlledGrid.PositionComp.WorldAABB.Center;
                     var Up = MyAPIGateway.Session.Camera.WorldMatrix.Up;
-                    if (s.enableMissileWarning && projInbound.Item1)
-                    {
-                        var message = new StringBuilder();
-                        message.Append("<color=255,0,0>");
-                        message.Append(projInbound.Item2 + " " + s.missileWarningText);
-                        var warning = new HudAPIv2.HUDMessage(message, new Vector2D(-0.11, -0.5), null, 2, 1.3d, true, true, Color.Black);
-                        warning.Visible = true;
-                    }
-
-                    if ((s.enableMissileLines || s.enableMissileSymbols) && projInbound.Item1)
-                    {
-                        projPosList.Clear();
-                        wcAPi.GetProjectilesLockedOnPos(controlledGrid, projPosList);
-                        foreach (var missile in projPosList)
-                        {
-                            var screenCoords = Vector3D.Transform(missile, viewProjectionMat);
-                            var offscreen = screenCoords.X > 1 || screenCoords.X < -1 || screenCoords.Y > 1 || screenCoords.Y < -1 || screenCoords.Z > 1;
-                            if (s.enableMissileLines)
-                                DrawLine(missile, line, s.missileColor);
-                            if (s.enableMissileSymbols && !offscreen)
-                            {
-                                var symbolPosition = new Vector2D(screenCoords.X, screenCoords.Y);
-                                var symbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, symbolPosition, Settings.Instance.missileColor, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: 0.785398f, HideHud: true, Shadowing: true);
-                            }
-                            if (s.enableMissileOffScreen && offscreen)
-                                DrawScreenEdge(screenCoords, s.missileColor);
-                        }
-                    }
-
                     var rollupList = new MyConcurrentList<expandedMark>();
                     var buffer = 0.035;
                     var ctrOffset = 0.25;
@@ -82,7 +53,7 @@ namespace WCRadar
                                 DrawLine(position, line, targ.enemy ? s.enemyColor.ToVector4() : s.neutralColor.ToVector4());
 
 
-                            if (ctrscreen && hudAPI.Heartbeat)
+                            if (ctrscreen)
                             {
                                 var labelString = (targ.factionTag.Length > 0? targ.factionTag + " - " : "") + parent.DisplayName + (targ.noPower ? " - No Power" : "");
                                 var textTopLeft = new Vector2D(topRightScreen.X + 0.05, topRightScreen.Y + 1.05);
@@ -175,8 +146,7 @@ namespace WCRadar
 
             var color = mark.color.ToVector4();
             //MySimpleObjectDraw.DrawLine(start, end, line, ref color, thickness);
-            MyTransparentGeometry.AddLineBillboard(line, mark.color, start, dir, length, thickness, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop, intensity: 5);
-            
+            MyTransparentGeometry.AddLineBillboard(corner, mark.color, start, dir, length, thickness, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop, intensity: 5); //was line type            
 
             var info = new StringBuilder($"<color={mark.color.R}, {mark.color.G}, {mark.color.B}>");
             info.Append(mark.label);
@@ -190,8 +160,6 @@ namespace WCRadar
             //var info2 = new StringBuilder($"<color={mark.color.R}, {mark.color.G}, {mark.color.B}>" + info);
             var label = new HudAPIv2.HUDMessage(info, textLocation, null, 2, 1, true, true);
             label.Visible = true;
-
-
 
             //Mini frame draw
             var ctrSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, mark.screenCoordsCtr, mark.color, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: 0, HideHud: true, Shadowing: true);

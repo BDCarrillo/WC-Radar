@@ -145,13 +145,19 @@
     <None Include=".vs\VSWorkspaceState.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Data\Scripts\WCRadar\Server.cs" />
+    <Compile Include="Data\Scripts\WCRadar\DrawMissile.cs" />
+    <Compile Include="Data\Scripts\WCRadar\DrawRollup.cs" />
+    <Compile Include="Data\Scripts\WCRadar\SupportClasses.cs" />
     <Compile Include="Data\Scripts\WCRadar\Networking.cs" />
-    <Compile Include="Data\Scripts\WCRadar\CoreSystemsApiBase.cs" />
-    <Compile Include="Data\Scripts\WCRadar\HudAPIv2.cs" />
+    <Compile Include="Data\Scripts\WCRadar\API\CoreSystemsApiBase.cs" />
+    <Compile Include="Data\Scripts\WCRadar\API\HudAPIv2.cs" />
+    <Compile Include="Data\Scripts\WCRadar\SessionLogic.cs" />
     <Compile Include="Data\Scripts\WCRadar\Settings.cs" />
-    <Compile Include="Data\Scripts\WCRadar\ExpandedDraw.cs" />
-    <Compile Include="Data\Scripts\WCRadar\WCRadar.cs" />
+    <Compile Include="Data\Scripts\WCRadar\DrawExpanded.cs" />
+    <Compile Include="Data\Scripts\WCRadar\SessionFields.cs" />
+    <Compile Include="Data\Scripts\WCRadar\Draw.cs" />
+    <Compile Include="Data\Scripts\WCRadar\SessionEvents.cs" />
+    <Compile Include="Data\Scripts\WCRadar\SessionRun.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>

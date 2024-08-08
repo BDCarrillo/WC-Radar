@@ -27,5 +27,11 @@ namespace WCRadar
             internal Vector3D worldCtr;
             internal double screenCoordsZ;
         }
+
+        internal class rollupInfo
+        {
+            internal float velocity;
+            internal float distance;
+        }
     }
 }

@@ -23,7 +23,7 @@ namespace WCRadar
         internal bool client;
         internal static bool isHost = false;
         internal bool menuInit = false;
-        internal int tick = -299;
+        internal int tick;
         public static bool serverEnforcement = false;
         public static bool serverRWREnforcement = false;
 
@@ -56,8 +56,10 @@ namespace WCRadar
         internal float symbolWidth = 0.03f;
         internal bool expandedDrawActive;
         internal ICollection<long> Players = new List<long>();
-
-
+        internal HudAPIv2.HUDMessage rollupText = null;
+        internal List<double> sortList = new List<double>();
+        internal Dictionary<double, ContactInfo> sortDict = new Dictionary<double, ContactInfo>();
+        internal List<string> sortFakeEnum = new List<string>() { "Closest First", "Furthest First", "Closest then ID", "Furthest then ID" };
 
         private void Clean()
         { 

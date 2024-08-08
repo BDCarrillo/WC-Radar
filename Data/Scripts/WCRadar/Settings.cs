@@ -5,6 +5,8 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Configuration;
+using System.Reflection.Emit;
 using VRage.Input;
 using VRage.Utils;
 using VRageMath;
@@ -49,7 +51,13 @@ namespace WCRadar
             rwrDisplayTimeTicks = 180,
             rwrColor = Color.Yellow,
             speedRel = true,
-
+            rollupPos = new Vector2D(-0.98f, 0.98f),
+            rollupTextSize = 0.8f,
+            rollupMaxNum = 5,
+            rollupHideEmpty = false,
+            rollupSort = 0,
+            showRollup = false,
+            rollupShowNum = true,
         };
 
         [ProtoMember(1)]
@@ -120,6 +128,20 @@ namespace WCRadar
         public Color friendlyColor { get; set; } = Color.Green;
         [ProtoMember(34)]
         public bool speedRel { get; set; } = true ;
+        [ProtoMember(35)]
+        public Vector2D rollupPos { get; set; } = new Vector2D(-0.98f, 0.98f);
+        [ProtoMember(36)]
+        public float rollupTextSize { get; set; } = 0.8f;
+        [ProtoMember(37)]
+        public int rollupMaxNum { get; set; } = 10;
+        [ProtoMember(38)]
+        public bool rollupHideEmpty { get; set; } = false;
+        [ProtoMember(39)]
+        public int rollupSort { get; set; } = 0;
+        [ProtoMember(40)]
+        public bool showRollup { get; set; } = false;
+        [ProtoMember(41)]
+        public bool rollupShowNum { get; set; } = true;
     }
     [ProtoContract]
     public class ServerSettings
@@ -271,13 +293,13 @@ namespace WCRadar
         }
 
         HudAPIv2.MenuRootCategory SettingsMenu;
-        HudAPIv2.MenuSubCategory ThreatMenu, ObstructionMenu, MissileMenu, OffscreenMenu, ConfirmReset, ResetServerConfirm, RWR;
+        HudAPIv2.MenuSubCategory ThreatMenu, ObstructionMenu, MissileMenu, OffscreenMenu, ConfirmReset, ResetServerConfirm, RWR, Rollup, SummaryListPos;
         HudAPIv2.MenuItem LineEnableThreat, SymbolEnableThreat, LabelEnableThreat, ObstructionEnable, AsteroidEnable, CollisionEnable, MissileEnable, SuppressSubgrid, ShowFactionThreat, HideName;
         HudAPIv2.MenuItem LineEnableObs, SymbolEnableObs, LabelEnableObs, HideUnpowered, Reset, ServerReset, Blank, ResetConfirm;
         HudAPIv2.MenuItem LineEnableMissile, SymbolEnableMissile, OffscreenMissileEnable, OffscreenThreatEnable, OffscreenObstructionEnable;
-        HudAPIv2.MenuItem RWREnable, SpeedSetting;
+        HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum;
 
-        HudAPIv2.MenuTextInput ObstructionRange, MissileText, OffscreenLength, OffscreenWidth, HideLabelThreshold, RWRTime;
+        HudAPIv2.MenuTextInput ObstructionRange, MissileText, OffscreenLength, OffscreenWidth, HideLabelThreshold, RWRTime, RollupMax;
         HudAPIv2.MenuColorPickerInput EnemyColor, ObsColor, MissileColor, NeutralColor, FriendlyColor, RWRColor;
         
         private void InitMenu()//callback
@@ -321,13 +343,27 @@ namespace WCRadar
                 RWRTime = new HudAPIv2.MenuTextInput("New Warning Display Time: " + Settings.Instance.rwrDisplayTimeTicks + " ticks", RWR, "Enter new display time in ticks (60 per second)", ChangeRWRTime);
                 RWRColor = new HudAPIv2.MenuColorPickerInput("Set Warning color >>", RWR, Settings.Instance.rwrColor, "Select color", ChangeRWRColor);
 
+            Rollup = new HudAPIv2.MenuSubCategory("Summary List Options >>", SettingsMenu, "Summary list of targets");
+                RollupShow = new HudAPIv2.MenuItem("Show summary list: " + Settings.Instance.showRollup, Rollup, ShowRollup, true);
+                RollupMax = new HudAPIv2.MenuTextInput("Max number shown: " + Settings.Instance.rollupMaxNum, Rollup, "Enter new max number to show", UpdateMax);
+                ShowNum = new HudAPIv2.MenuItem("Use last 4 of entity ID: " + Settings.Instance.rollupShowNum, Rollup, changeRollupNumShow, true);
+
+                SummaryListPos = new HudAPIv2.MenuSubCategory("Summary list location/text size >>", Rollup, "Summary list location/text size");
+                    MoveLeft = new HudAPIv2.MenuItem("Move Left", SummaryListPos, LeftMove);
+                    MoveRight = new HudAPIv2.MenuItem("Move Right", SummaryListPos, RightMove);
+                    MoveUp = new HudAPIv2.MenuItem("Move Up", SummaryListPos, UpMove);
+                    MoveDown = new HudAPIv2.MenuItem("Move Down", SummaryListPos, DownMove);
+                    SizeUp = new HudAPIv2.MenuItem("Increase text size", SummaryListPos, UpSize);
+                    SizeDown = new HudAPIv2.MenuItem("Decrease text size", SummaryListPos, DownSize);
+                HideEmpty = new HudAPIv2.MenuItem("Hide if no targets: " + Settings.Instance.rollupHideEmpty, Rollup, HideRollup, true);
+                SortClosest = new HudAPIv2.MenuItem("Sort by: " + sortFakeEnum[Settings.Instance.rollupSort], Rollup, RollupSort, true);
 
 
             Blank = new HudAPIv2.MenuItem("- - - - - - - - - - -", SettingsMenu, null);
             HideName = new HudAPIv2.MenuItem("Hide grid name: " + Settings.Instance.hideName, SettingsMenu, HideGridName);
             HideUnpowered = new HudAPIv2.MenuItem("Hide unpowered grids: " + Settings.Instance.hideUnpowered, SettingsMenu, HideUnpoweredGrids);
             SuppressSubgrid = new HudAPIv2.MenuItem("Hide subgrids: " + Settings.Instance.suppressSubgrids, SettingsMenu, SuppressSubgrids);
-            HideLabelThreshold = new HudAPIv2.MenuTextInput("Hide label if grid <" + Settings.Instance.hideLabelBlockThreshold + " blocks", SettingsMenu, "Enter threshold to show labels.  Default is 20", ChangeLabelThreshold);
+            HideLabelThreshold = new HudAPIv2.MenuTextInput("Hide grids <" + Settings.Instance.hideLabelBlockThreshold + " blocks", SettingsMenu, "Enter threshold to show labels.  Default is 20", ChangeLabelThreshold);
 
             CollisionEnable = new HudAPIv2.MenuItem("Show collision alert: " + Settings.Instance.enableCollisionWarning, SettingsMenu, ShowCollision);
 
@@ -337,6 +373,97 @@ namespace WCRadar
             ResetServerConfirm = new HudAPIv2.MenuSubCategory("Reset to server defaults (if any)", SettingsMenu, "Confirm");
             if (!MyAPIGateway.Multiplayer.MultiplayerActive) ResetServerConfirm.Interactable = false;
             ServerReset = new HudAPIv2.MenuItem("Reset to server default (if any)", ResetServerConfirm, ResetServerDefaults);
+
+            //Init rollup text box
+            rollupText = new HudAPIv2.HUDMessage(new System.Text.StringBuilder(), new Vector2D(0, 0), Shadowing: true, ShadowColor: Color.Black);
+            rollupText.InitialColor = Color.White;
+            rollupText.Origin = Settings.Instance.rollupPos;
+            rollupText.Scale = Settings.Instance.rollupTextSize;
+            rollupText.Visible = false;
+            rollupText.Font = "monospace";
+        }
+
+        private void changeRollupNumShow()
+        {
+            Settings.Instance.rollupShowNum = !Settings.Instance.rollupShowNum;
+
+            if(!Settings.Instance.rollupShowNum)
+            {
+                if (Settings.Instance.rollupSort == 2)
+                    Settings.Instance.rollupSort = 0;
+                else if (Settings.Instance.rollupSort == 3)
+                    Settings.Instance.rollupSort = 1;
+                SortClosest.Text = "Sort by: " + sortFakeEnum[Settings.Instance.rollupSort];
+            }
+
+            ShowNum.Text = "Use last 4 of entity ID: " + Settings.Instance.rollupShowNum;
+        }
+
+        private void ShowRollup()
+        {
+            Settings.Instance.showRollup = !Settings.Instance.showRollup;
+            if (!Settings.Instance.showRollup && rollupText.Visible)
+                rollupText.Visible = false;
+            RollupShow.Text = "Show summary list: " + Settings.Instance.showRollup;
+        }
+
+        private void RollupSort()
+        {
+            Settings.Instance.rollupSort++;
+            if(Settings.Instance.rollupSort > 3 || (!Settings.Instance.rollupShowNum && Settings.Instance.rollupSort > 1))
+                Settings.Instance.rollupSort = 0;
+            SortClosest.Text = "Sort by: " + sortFakeEnum[Settings.Instance.rollupSort];
+        }
+        private void HideRollup()
+        {
+            Settings.Instance.rollupHideEmpty = !Settings.Instance.rollupHideEmpty;
+            HideEmpty.Text = "Hide if no targets: " + Settings.Instance.rollupHideEmpty;
+        }
+
+        private void UpdateMax(string obj)
+        {
+            int getter;
+            if (!int.TryParse(obj, out getter))
+                return;
+            Settings.Instance.rollupMaxNum = getter;
+            RollupMax.Text = "Max number shown: " + Settings.Instance.rollupMaxNum;
+        }
+
+        private void UpSize()
+        {
+            Settings.Instance.rollupTextSize += 0.025f;
+            rollupText.Scale = Settings.Instance.rollupTextSize;
+            MyAPIGateway.Utilities.ShowNotification(Settings.Instance.rollupTextSize.ToString());
+        }
+        private void DownSize()
+        {
+            Settings.Instance.rollupTextSize -= 0.025f;
+            rollupText.Scale = Settings.Instance.rollupTextSize;
+        }
+
+        private void LeftMove()
+        {
+            Settings.Instance.rollupPos += new Vector2D(-0.005, 0);
+            UpdateRollupCoords();
+        }
+        private void RightMove()
+        {
+            Settings.Instance.rollupPos += new Vector2D(0.005, 0);
+            UpdateRollupCoords();
+        }
+        private void UpMove()
+        {
+            Settings.Instance.rollupPos += new Vector2D(0, 0.01);
+            UpdateRollupCoords();
+        }
+        private void DownMove()
+        {
+            Settings.Instance.rollupPos += new Vector2D(0, -0.01);
+            UpdateRollupCoords();
+        }
+        private void UpdateRollupCoords()
+        {
+            rollupText.Origin = Settings.Instance.rollupPos;
         }
 
         private void ChangeSpeedType()
@@ -364,18 +491,18 @@ namespace WCRadar
             var tempSettings = new Settings();
             tempSettings = Settings.Default;
             Settings.Instance = tempSettings;
+            rollupText.Scale = Settings.Instance.rollupTextSize;
+            rollupText.Origin = Settings.Instance.rollupPos;
         }
 
         private void ResetServerDefaults()
         {
-
             if (client)
             {
                 MyAPIGateway.Utilities.ShowNotification("WC Radar - Request sent to server for defaults");
                 localCfg = false;
                 Networking.SendToServer(new RequestSettings(MyAPIGateway.Multiplayer.MyId));
             }
-
         }
 
         private void ChangeLabelThreshold(string obj)
@@ -384,7 +511,7 @@ namespace WCRadar
             if (!int.TryParse(obj, out getter))
                 return;
             Settings.Instance.hideLabelBlockThreshold = getter;
-            HideLabelThreshold.Text = "Hide label if grid <" + Settings.Instance.hideLabelBlockThreshold + " blocks";
+            HideLabelThreshold.Text = "Hide grids <" + Settings.Instance.hideLabelBlockThreshold + " blocks";
         }
         private void ChangeIndicatorLength(string obj)
         {

@@ -204,8 +204,7 @@ namespace Digi.Example_NetworkProtobuf
                     {
                         Settings.Instance = cSettings;
                         MyLog.Default.WriteLineAndConsole($"WC Radar: Received server display defaults");
-                        display = true;
-                       
+                        display = true;                       
                     }
                     if (sSettings != null && sSettings.blockSubtypeList != null && sSettings.blockSubtypeList.Count != 0)
                     {
