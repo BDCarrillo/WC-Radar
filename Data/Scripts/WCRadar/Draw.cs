@@ -136,7 +136,7 @@ namespace WCRadar
                                 DrawLine(position, line, rwr ? s.rwrColor.ToVector4() : targ.enemy ? s.enemyColor.ToVector4() : s.neutralColor.ToVector4());
                             if (s.enableSymbolsThreat && !offscreen)
                                 DrawFrame(topRightScreen, screenCoords, rwr ? s.rwrColor.ToVector4() : targ.enemy ? s.enemyColor.ToVector4() : s.neutralColor.ToVector4());
-                            if (s.enableLabelsThreat && !offscreen && hudAPI.Heartbeat && targ.blockCount > s.hideLabelBlockThreshold)
+                            if (s.enableLabelsThreat && !offscreen)
                                 DrawLabel(parentGrid, position, parent, targSize, rwr ? s.rwrColor.ToVector4() : targ.enemy ? s.enemyColor.ToVector4() : s.neutralColor.ToVector4(), s.showFactionThreat, targ.factionTag, targ.noPower, new Vector2D(topRightScreen.X, topRightScreen.Y));
                         }
                         catch (Exception e)

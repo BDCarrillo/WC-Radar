@@ -46,7 +46,7 @@ namespace WCRadar
             enableObstructionOffScreen = false,
             OffScreenIndicatorLen = 0.15f, //was 0.05
             OffScreenIndicatorThick = 0.01f,  //was 0.0003
-            hideLabelBlockThreshold = 20,
+            hideLabelBlockThreshold = 10,
             rwrDisable = false,
             rwrDisplayTimeTicks = 180,
             rwrColor = Color.Yellow,
@@ -55,7 +55,7 @@ namespace WCRadar
             rollupTextSize = 0.8f,
             rollupMaxNum = 5,
             rollupHideEmpty = false,
-            rollupSort = 0,
+            rollupSort = 2,
             showRollup = false,
             rollupShowNum = true,
         };
@@ -113,7 +113,7 @@ namespace WCRadar
         [ProtoMember(26)]
         public float OffScreenIndicatorThick { get; set; } = 0.01f;
         [ProtoMember(27)]
-        public int hideLabelBlockThreshold { get; set; } = 20;
+        public int hideLabelBlockThreshold { get; set; } = 10;
         [ProtoMember(28)]
         public bool hideName { get; set; } = false;
         [ProtoMember(29)]
@@ -133,11 +133,11 @@ namespace WCRadar
         [ProtoMember(36)]
         public float rollupTextSize { get; set; } = 0.8f;
         [ProtoMember(37)]
-        public int rollupMaxNum { get; set; } = 10;
+        public int rollupMaxNum { get; set; } = 5;
         [ProtoMember(38)]
         public bool rollupHideEmpty { get; set; } = false;
         [ProtoMember(39)]
-        public int rollupSort { get; set; } = 0;
+        public int rollupSort { get; set; } = 2;
         [ProtoMember(40)]
         public bool showRollup { get; set; } = false;
         [ProtoMember(41)]
@@ -363,7 +363,7 @@ namespace WCRadar
             HideName = new HudAPIv2.MenuItem("Hide grid name: " + Settings.Instance.hideName, SettingsMenu, HideGridName);
             HideUnpowered = new HudAPIv2.MenuItem("Hide unpowered grids: " + Settings.Instance.hideUnpowered, SettingsMenu, HideUnpoweredGrids);
             SuppressSubgrid = new HudAPIv2.MenuItem("Hide subgrids: " + Settings.Instance.suppressSubgrids, SettingsMenu, SuppressSubgrids);
-            HideLabelThreshold = new HudAPIv2.MenuTextInput("Hide grids <" + Settings.Instance.hideLabelBlockThreshold + " blocks", SettingsMenu, "Enter threshold to show labels.  Default is 20", ChangeLabelThreshold);
+            HideLabelThreshold = new HudAPIv2.MenuTextInput("Hide grids <" + Settings.Instance.hideLabelBlockThreshold + " blocks", SettingsMenu, "Enter threshold to show symbols/labels.  Default is 10", ChangeLabelThreshold);
 
             CollisionEnable = new HudAPIv2.MenuItem("Show collision alert: " + Settings.Instance.enableCollisionWarning, SettingsMenu, ShowCollision);
 
