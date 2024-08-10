@@ -28,8 +28,6 @@ namespace WCRadar
                     foreach (var targ in threatListCleaned)
                     {
                         if (targ.entity.MarkedForClose || targ.entity.Closed || targ.blockCount < s.hideLabelBlockThreshold || s.hideUnpowered && targ.noPower) continue;
-                        var idStr = targ.entity.EntityId.ToString();
-                        var name = double.Parse(idStr.Substring(idStr.Length - 4, 4));
                         var sortVal = Vector3D.Distance(targ.entity.PositionComp.WorldAABB.Center, controlledGrid.PositionComp.WorldAABB.Center);
 
                         sortList.Add(sortVal);
@@ -40,23 +38,20 @@ namespace WCRadar
                         sortList.Reverse(); //Flip to furthest
                     if (sortList.Count > s.rollupMaxNum)
                         sortList.RemoveRange(s.rollupMaxNum, sortList.Count - s.rollupMaxNum);
-                    if (s.rollupSort > 1)//Rearrange by num
+                    if (s.rollupSort > 1)//Rearrange by ID
                     {
-                        var numList = new List<int>();
-                        var numDict = new Dictionary<int, double>();
+                        var numList = new List<string>();
+                        var numDict = new Dictionary<string, double>();
                         for (var i = 0; i < sortList.Count; i++)
                         {
-                            var idStr = sortDict[sortList[i]].entity.EntityId.ToString();
-                            var name = int.Parse(idStr.Substring(idStr.Length - 4, 4));
+                            var name = sortDict[sortList[i]].entity.EntityId.ToString().Substring(0, 16);
                             numList.Add(name);
                             numDict.Add(name, sortList[i]);
                         }
                         numList.Sort();
                         sortList.Clear();
                         for (var i = 0; i < numList.Count; i++)
-                        {
                             sortList.Add(numDict[numList[i]]);
-                        }
                     }
                 }
 
@@ -64,12 +59,11 @@ namespace WCRadar
                 {
                     var targ = sortDict[sortList[i]];
                     var targGrid = targ.entity as MyCubeGrid;
-                    var idStr = targ.entity.EntityId.ToString();
-                    var name = idStr.Substring(idStr.Length - 4, 4);
+                    var name = targ.entity.EntityId.ToString().Substring(0, 4);
                     if (updateText)
                     {
                         var distance = sortList[i];
-                        var distStr = (distance > 1000 ? (distance / 1000).ToString("0.0") + " km" : (int)distance + " m");
+                        var distStr = distance > 1000 ? (distance / 1000).ToString("0.0") + " km" : (int)distance + " m";
                         var speedStr = "";
                         if (s.speedRel)
                             speedStr = $"^{(int)(controlledGrid.LinearVelocity - targGrid.LinearVelocity).Length()} m/s";
