@@ -59,6 +59,7 @@ namespace WCRadar
             showRollup = false,
             rollupShowNum = true,
             labelTextSize = 1f,
+            rollupShowFac = true,
         };
 
         [ProtoMember(1)]
@@ -145,6 +146,8 @@ namespace WCRadar
         public bool rollupShowNum { get; set; } = true;
         [ProtoMember(42)]
         public float labelTextSize { get; set; } = 1f;
+        [ProtoMember(43)]
+        public bool rollupShowFac { get; set; } = true;
     }
     [ProtoContract]
     public class ServerSettings
@@ -300,7 +303,7 @@ namespace WCRadar
         HudAPIv2.MenuItem LineEnableThreat, SymbolEnableThreat, LabelEnableThreat, ObstructionEnable, AsteroidEnable, CollisionEnable, MissileEnable, SuppressSubgrid, ShowFactionThreat, HideName;
         HudAPIv2.MenuItem LineEnableObs, SymbolEnableObs, LabelEnableObs, HideUnpowered, Reset, ServerReset, Blank, ResetConfirm;
         HudAPIv2.MenuItem LineEnableMissile, SymbolEnableMissile, OffscreenMissileEnable, OffscreenThreatEnable, OffscreenObstructionEnable, LabelUp, LabelDown;
-        HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum;
+        HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum, RollupFac;
 
         HudAPIv2.MenuTextInput ObstructionRange, MissileText, OffscreenLength, OffscreenWidth, HideLabelThreshold, RWRTime, RollupMax;
         HudAPIv2.MenuColorPickerInput EnemyColor, ObsColor, MissileColor, NeutralColor, FriendlyColor, RWRColor;
@@ -350,7 +353,7 @@ namespace WCRadar
                 RollupShow = new HudAPIv2.MenuItem("Show summary list: " + Settings.Instance.showRollup, Rollup, ShowRollup, true);
                 RollupMax = new HudAPIv2.MenuTextInput("Max number shown: " + Settings.Instance.rollupMaxNum, Rollup, "Enter new max number to show", UpdateMax);
                 ShowNum = new HudAPIv2.MenuItem("Use last 4 of entity ID: " + Settings.Instance.rollupShowNum, Rollup, changeRollupNumShow, true);
-
+                RollupFac = new HudAPIv2.MenuItem("Show faction in summary: " + Settings.Instance.rollupShowFac, Rollup, FacRollup);
                 SummaryListPos = new HudAPIv2.MenuSubCategory("Summary list location/text size >>", Rollup, "Hold shift to move 10x per click");
                     MoveLeft = new HudAPIv2.MenuItem("Move Left", SummaryListPos, LeftMove);
                     MoveRight = new HudAPIv2.MenuItem("Move Right", SummaryListPos, RightMove);
@@ -387,6 +390,11 @@ namespace WCRadar
             rollupText.Scale = Settings.Instance.rollupTextSize;
             rollupText.Visible = false;
             rollupText.Font = "monospace";
+        }
+        private void FacRollup()
+        {
+            Settings.Instance.rollupShowFac = !Settings.Instance.rollupShowFac;
+            RollupFac.Text = "Show faction in summary: " + Settings.Instance.rollupShowFac;
         }
 
         private void changeRollupNumShow()

@@ -68,7 +68,7 @@ namespace WCRadar
                         else
                             speedStr = $"{(int)targGrid.LinearVelocity.Length()} m/s";
                         var color = rwrDict.ContainsKey(targ.entity) ? s.rwrColor : targ.enemy ? s.enemyColor : s.neutralColor;
-                        info.AppendLine($"<color={color.R}, {color.G}, {color.B}> {(s.rollupShowNum ? name + " - " : "")}{(s.showFactionThreat ? targ.factionTag + " - " : "")}{targGrid.DisplayName} - {distStr} - {speedStr}{(targ.noPower ? " - NO PWR" : "")}");
+                        info.AppendLine($"<color={color.R}, {color.G}, {color.B}> {(s.rollupShowNum ? name + " - " : "")}{(s.rollupShowFac && targ.factionTag != "" ? targ.factionTag + " - " : "")}{targGrid.DisplayName} - {distStr} - {speedStr}{(targ.noPower ? " - NO PWR" : "")}");
                     }
 
                     //Draw the corresponding number
