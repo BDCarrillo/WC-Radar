@@ -23,7 +23,7 @@ namespace WCRadar
                     var message = new StringBuilder();
                     message.Append("<color=255,0,0>");
                     message.Append(projInbound.Item2 + " " + s.missileWarningText);
-                    var warning = new HudAPIv2.HUDMessage(message, new Vector2D(-0.11, -0.5), null, 2, 1.3d, true, true, Color.Black);
+                    var warning = new HudAPIv2.HUDMessage(message, new Vector2D(-0.11, -0.5), null, 2, Settings.Instance.labelTextSize * 1.25f, true, true, Color.Black);
                     warning.Visible = true;
                 }
 

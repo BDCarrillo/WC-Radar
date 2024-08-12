@@ -17,8 +17,6 @@ namespace WCRadar
             {
                 var updateText = tick % 15 == 0;
                 var s = Settings.Instance;
-                var eColor = s.enemyColor;
-                var rwrColor = s.rwrColor;
                 var info = new StringBuilder();
                 if (updateText)
                 {
@@ -69,14 +67,14 @@ namespace WCRadar
                             speedStr = $"^{(int)(controlledGrid.LinearVelocity - targGrid.LinearVelocity).Length()} m/s";
                         else
                             speedStr = $"{(int)targGrid.LinearVelocity.Length()} m/s";
-                        var color = rwrDict.ContainsKey(targ.entity) ? rwrColor : eColor;
+                        var color = rwrDict.ContainsKey(targ.entity) ? s.rwrColor : targ.enemy ? s.enemyColor : s.neutralColor;
                         info.AppendLine($"<color={color.R}, {color.G}, {color.B}> {(s.rollupShowNum ? name + " - " : "")}{(s.showFactionThreat ? targ.factionTag + " - " : "")}{targGrid.DisplayName} - {distStr} - {speedStr}{(targ.noPower ? " - NO PWR" : "")}");
                     }
 
                     //Draw the corresponding number
                     if(s.rollupShowNum)
                     {
-                        var color2 = rwrDict.ContainsKey(targ.entity) ? rwrColor : eColor;
+                        var color2 = rwrDict.ContainsKey(targ.entity) ? s.rwrColor : targ.enemy ? s.enemyColor : s.neutralColor;
                         var position = targGrid.PositionComp.WorldAABB.Center;
                         var targSize = targGrid.PositionComp.LocalVolume.Radius;
                         targSize *= 1.1f;

@@ -58,6 +58,7 @@ namespace WCRadar
             rollupSort = 2,
             showRollup = false,
             rollupShowNum = true,
+            labelTextSize = 1f,
         };
 
         [ProtoMember(1)]
@@ -142,6 +143,8 @@ namespace WCRadar
         public bool showRollup { get; set; } = false;
         [ProtoMember(41)]
         public bool rollupShowNum { get; set; } = true;
+        [ProtoMember(42)]
+        public float labelTextSize { get; set; } = 1f;
     }
     [ProtoContract]
     public class ServerSettings
@@ -293,10 +296,10 @@ namespace WCRadar
         }
 
         HudAPIv2.MenuRootCategory SettingsMenu;
-        HudAPIv2.MenuSubCategory ThreatMenu, ObstructionMenu, MissileMenu, OffscreenMenu, ConfirmReset, ResetServerConfirm, RWR, Rollup, SummaryListPos;
+        HudAPIv2.MenuSubCategory ThreatMenu, ObstructionMenu, MissileMenu, OffscreenMenu, ConfirmReset, ResetServerConfirm, RWR, Rollup, SummaryListPos, LabelSize;
         HudAPIv2.MenuItem LineEnableThreat, SymbolEnableThreat, LabelEnableThreat, ObstructionEnable, AsteroidEnable, CollisionEnable, MissileEnable, SuppressSubgrid, ShowFactionThreat, HideName;
         HudAPIv2.MenuItem LineEnableObs, SymbolEnableObs, LabelEnableObs, HideUnpowered, Reset, ServerReset, Blank, ResetConfirm;
-        HudAPIv2.MenuItem LineEnableMissile, SymbolEnableMissile, OffscreenMissileEnable, OffscreenThreatEnable, OffscreenObstructionEnable;
+        HudAPIv2.MenuItem LineEnableMissile, SymbolEnableMissile, OffscreenMissileEnable, OffscreenThreatEnable, OffscreenObstructionEnable, LabelUp, LabelDown;
         HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum;
 
         HudAPIv2.MenuTextInput ObstructionRange, MissileText, OffscreenLength, OffscreenWidth, HideLabelThreshold, RWRTime, RollupMax;
@@ -348,7 +351,7 @@ namespace WCRadar
                 RollupMax = new HudAPIv2.MenuTextInput("Max number shown: " + Settings.Instance.rollupMaxNum, Rollup, "Enter new max number to show", UpdateMax);
                 ShowNum = new HudAPIv2.MenuItem("Use last 4 of entity ID: " + Settings.Instance.rollupShowNum, Rollup, changeRollupNumShow, true);
 
-                SummaryListPos = new HudAPIv2.MenuSubCategory("Summary list location/text size >>", Rollup, "Summary list location/text size");
+                SummaryListPos = new HudAPIv2.MenuSubCategory("Summary list location/text size >>", Rollup, "Hold shift to move 10x per click");
                     MoveLeft = new HudAPIv2.MenuItem("Move Left", SummaryListPos, LeftMove);
                     MoveRight = new HudAPIv2.MenuItem("Move Right", SummaryListPos, RightMove);
                     MoveUp = new HudAPIv2.MenuItem("Move Up", SummaryListPos, UpMove);
@@ -366,6 +369,9 @@ namespace WCRadar
             HideLabelThreshold = new HudAPIv2.MenuTextInput("Hide grids <" + Settings.Instance.hideLabelBlockThreshold + " blocks", SettingsMenu, "Enter threshold to show symbols/labels.  Default is 10", ChangeLabelThreshold);
 
             CollisionEnable = new HudAPIv2.MenuItem("Show collision alert: " + Settings.Instance.enableCollisionWarning, SettingsMenu, ShowCollision);
+            LabelSize = new HudAPIv2.MenuSubCategory("Change label text size >>", SettingsMenu, "Change label text size");
+                LabelUp = new HudAPIv2.MenuItem("Increase text size", LabelSize, UpSizeLabel);
+                LabelDown = new HudAPIv2.MenuItem("Decrease text size", LabelSize, DownSizeLabel);
 
             Blank = new HudAPIv2.MenuItem("- - - - - - - - - - -", SettingsMenu, null);
             ConfirmReset = new HudAPIv2.MenuSubCategory("Reset to defaults", SettingsMenu, "Confirm");
@@ -429,11 +435,18 @@ namespace WCRadar
             RollupMax.Text = "Max number shown: " + Settings.Instance.rollupMaxNum;
         }
 
+        private void UpSizeLabel()
+        {
+            Settings.Instance.labelTextSize += 0.025f;
+        }
+        private void DownSizeLabel()
+        {
+            Settings.Instance.labelTextSize -= 0.025f;
+        }
         private void UpSize()
         {
             Settings.Instance.rollupTextSize += 0.025f;
             rollupText.Scale = Settings.Instance.rollupTextSize;
-            MyAPIGateway.Utilities.ShowNotification(Settings.Instance.rollupTextSize.ToString());
         }
         private void DownSize()
         {
@@ -443,22 +456,26 @@ namespace WCRadar
 
         private void LeftMove()
         {
-            Settings.Instance.rollupPos += new Vector2D(-0.005, 0);
+            var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
+            Settings.Instance.rollupPos += new Vector2D(-0.005 * mult, 0);
             UpdateRollupCoords();
         }
         private void RightMove()
         {
-            Settings.Instance.rollupPos += new Vector2D(0.005, 0);
+            var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
+            Settings.Instance.rollupPos += new Vector2D(0.005 * mult, 0);
             UpdateRollupCoords();
         }
         private void UpMove()
         {
-            Settings.Instance.rollupPos += new Vector2D(0, 0.01);
+            var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
+            Settings.Instance.rollupPos += new Vector2D(0, 0.005 * mult);
             UpdateRollupCoords();
         }
         private void DownMove()
         {
-            Settings.Instance.rollupPos += new Vector2D(0, -0.01);
+            var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
+            Settings.Instance.rollupPos += new Vector2D(0, -0.005 * mult);
             UpdateRollupCoords();
         }
         private void UpdateRollupCoords()
@@ -478,7 +495,8 @@ namespace WCRadar
                 return;
             Settings.Instance.rwrDisplayTimeTicks = getter;
             RWRTime.Text = "New Warning Display Time: " + Settings.Instance.rwrDisplayTimeTicks + " ticks";
-        }        private void RWRToggle()
+        }        
+        private void RWRToggle()
         {
             Settings.Instance.rwrDisable = !Settings.Instance.rwrDisable;
             RWREnable.Text = "Disable Radar Warning: " + Settings.Instance.rwrDisable;
@@ -493,6 +511,7 @@ namespace WCRadar
             Settings.Instance = tempSettings;
             rollupText.Scale = Settings.Instance.rollupTextSize;
             rollupText.Origin = Settings.Instance.rollupPos;
+            rollupText.Visible = false;
         }
 
         private void ResetServerDefaults()

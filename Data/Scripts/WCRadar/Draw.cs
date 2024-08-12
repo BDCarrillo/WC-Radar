@@ -195,7 +195,7 @@ namespace WCRadar
                         }
                         if (display)
                         {
-                            var warning = new HudAPIv2.HUDMessage(message, new Vector2D(-0.11, -0.6), null, 2, 1.3d, true, true, Color.Black);
+                            var warning = new HudAPIv2.HUDMessage(message, new Vector2D(-0.11, -0.6), null, 2, s.labelTextSize * 1.25f, true, true, Color.Black);
                             warning.Visible = true;
                         }
                     }
@@ -223,7 +223,7 @@ namespace WCRadar
                 else
                     info.AppendLine($"  {(int)parentGrid.LinearVelocity.Length()} m/s");
             }
-            var label = new HudAPIv2.HUDMessage(info, labelposition, null, 2, 1, true, true);
+            var label = new HudAPIv2.HUDMessage(info, labelposition, null, 2, Settings.Instance.labelTextSize, true, true);
             label.Visible = true;
         }
         private void DrawLine(Vector3D position, MyStringId texture, Vector4 color)
