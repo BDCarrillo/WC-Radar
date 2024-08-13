@@ -78,16 +78,21 @@ namespace WCRadar
                         var position = targGrid.PositionComp.WorldAABB.Center;
                         var targSize = targGrid.PositionComp.LocalVolume.Radius;
                         targSize *= 1.1f;
-                        var ctr = Vector3D.Transform(position + camMat.Up * targSize, viewProjectionMat);
+                        var ctr = Vector3D.Transform(position, viewProjectionMat);
                         var offscreen = ctr.X > 1 || ctr.X < -1 || ctr.Y > 1 || ctr.Y < -1 || ctr.Z > 1;
 
                         if (offscreen)
                             continue;
 
-                        var label = new HudAPIv2.HUDMessage(new StringBuilder($"<color={color2.R}, {color2.G}, {color2.B}>" + (name)), new Vector2D(ctr.X, ctr.Y), null, 2, s.rollupTextSize, true, true);
+                        var topRightScreen = Vector3D.Transform(position + camMat.Up * targSize + camMat.Right * targSize, viewProjectionMat);
+                        var label = new HudAPIv2.HUDMessage(new StringBuilder($"<color={color2.R}, {color2.G}, {color2.B}>" + name), new Vector2D(ctr.X, ctr.Y), null, 2, s.rollupTextSize, true, true);
                         label.Font = "monospace";
                         var offset = label.GetTextLength();
-                        label.Offset = new Vector2D(offset.X * -0.5f, offset.Y * -1.01f);
+                        var offsetX = topRightScreen.X - ctr.X;
+                        if (offsetX > symbolWidth * 0.55f)
+                            label.Offset = new Vector2D(offset.X * -0.5f, offset.Y * -1.01f);
+                        else
+                            label.Offset = new Vector2D(offset.X * -0.5f, offset.Y * -1.01f + symbolHeight * 0.5f);
                         label.Visible = true;
                     }
                 }
