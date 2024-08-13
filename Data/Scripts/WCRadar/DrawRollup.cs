@@ -90,7 +90,7 @@ namespace WCRadar
                         var offset = label.GetTextLength();
                         var offsetX = topRightScreen.X - ctr.X;
                         if (offsetX > symbolWidth * 0.55f)
-                            label.Offset = new Vector2D(offset.X * -0.5f, offset.Y * -1.01f);
+                            label.Offset = new Vector2D(offset.X * -0.5f, offset.Y * -1.01f + topRightScreen.Y - ctr.Y);
                         else
                             label.Offset = new Vector2D(offset.X * -0.5f, offset.Y * -1.01f + symbolHeight * 0.5f);
                         label.Visible = true;
