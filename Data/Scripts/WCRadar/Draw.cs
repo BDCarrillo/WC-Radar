@@ -214,7 +214,7 @@ namespace WCRadar
             var info = new StringBuilder($"<color={color.R}, {color.G}, {color.B}>");
             if (showFaction && factionTag != "") info.AppendLine($"  {factionTag}");
             if (!Settings.Instance.hideName && parent.DisplayName != null) info.AppendLine($"  {parent.DisplayName}");
-            if (noPower) info.AppendLine($"  No Power");
+            if (noPower) info.AppendLine($"  No Pwr");
             info.AppendLine($"  {(distance > 1000 ? (distance / 1000).ToString("0.0") + " km" : (int)distance + " m")}");
             if (parentGrid != null)
             {
