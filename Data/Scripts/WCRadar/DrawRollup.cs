@@ -53,7 +53,7 @@ namespace WCRadar
                     }
                 }
 
-                for ( var i = 0; i < sortList.Count; i++ )
+                for (var i = 0; i < sortList.Count; i++)
                 {
                     var targ = sortDict[sortList[i]];
                     var targGrid = targ.entity as MyCubeGrid;
@@ -72,7 +72,7 @@ namespace WCRadar
                     }
 
                     //Draw the corresponding number
-                    if(s.rollupShowNum)
+                    if (s.rollupShowNum)
                     {
                         var color2 = rwrDict.ContainsKey(targ.entity) ? s.rwrColor : targ.enemy ? s.enemyColor : s.neutralColor;
                         var position = targGrid.PositionComp.WorldAABB.Center;
@@ -97,14 +97,17 @@ namespace WCRadar
                     }
                 }
 
-                if(updateText)
+                if (updateText)
                     rollupText.Message = info;
                 rollupText.Visible = true;
             }
             else if (Settings.Instance.rollupHideEmpty)
                 rollupText.Visible = false;
             else
+            {
                 rollupText.Message = new StringBuilder("No Targets");
+                rollupText.Visible = true;
+            }
         }
     }
 }
