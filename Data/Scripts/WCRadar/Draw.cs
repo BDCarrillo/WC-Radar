@@ -33,6 +33,7 @@ namespace WCRadar
                     }
                     var playerPos = controlledGrid.PositionComp.WorldAABB.Center;
                     var Up = MyAPIGateway.Session.Camera.WorldMatrix.Up;
+                    var lineScale = (float)(0.1 * Math.Tan(Session.Camera.FovWithZoom * 0.5));
 
                     #region Obstructions
                     if (s.enableObstructions || s.enableAsteroids)
@@ -109,20 +110,16 @@ namespace WCRadar
 
                             
                             //Targ movement vector line
-                            /*
-                            if (parentGrid.Physics != null)
+                            
+                            if (s.showThreatVectors && !offscreen && parentGrid.Physics != null)
                             {
-                                var ScaleFov = Math.Tan(Session.Camera.FovWithZoom * 0.5);
-                                var culledStartScreenPos = screenCoords;
-                                var lineScale = (float)(0.1 * ScaleFov);
-                                var culledStartDotPos = new Vector2D(culledStartScreenPos.X, culledStartScreenPos.Y);
-                                culledStartDotPos.X *= lineScale * aspectRatio;
-                                culledStartDotPos.Y *= lineScale;
+                                var culledStartDotPos = new Vector2D(screenCoords.X * lineScale * aspectRatio, screenCoords.Y * lineScale);
                                 var lineStartWorldPos = Vector3D.Transform(new Vector3D(culledStartDotPos.X, culledStartDotPos.Y, -0.1), camMat);
-                                var vector = Vector3D.Normalize(parentGrid.Physics.LinearVelocity); //Need to do the same transform hoops as the screen ratio would distort directionality
-                                MyTransparentGeometry.AddLineBillboard(corner, s.enemyColor, lineStartWorldPos, vector, 0.01f, 0.0005f);
+
+                                var screenCoordsEnd = Vector3D.Transform(position + parentGrid.Physics.LinearVelocity, viewProjectionMat);
+                                MyTransparentGeometry.AddLineBillboard(screenCoordsEnd.Z > screenCoords.Z ? dash : corner, s.enemyColor, lineStartWorldPos, Vector3D.Normalize(parentGrid.Physics.LinearVelocity), 0.01f, 0.00025f);
                             }
-                            */
+                            
                             /*
                              when there are a lot of contacts close together i feel that the vector lines will make is much messier and maybe having them 
                             automatically hide when it gets too cluttered and only show when you press control. but when there are only a few it shows the 

@@ -60,6 +60,7 @@ namespace WCRadar
             rollupShowNum = true,
             labelTextSize = 1f,
             rollupShowFac = true,
+            showThreatVectors = false,
         };
 
         [ProtoMember(1)]
@@ -148,6 +149,8 @@ namespace WCRadar
         public float labelTextSize { get; set; } = 1f;
         [ProtoMember(43)]
         public bool rollupShowFac { get; set; } = true;
+        [ProtoMember(44)]
+        public bool showThreatVectors { get; set; } = false;
     }
     [ProtoContract]
     public class ServerSettings
@@ -303,7 +306,7 @@ namespace WCRadar
         HudAPIv2.MenuItem LineEnableThreat, SymbolEnableThreat, LabelEnableThreat, ObstructionEnable, AsteroidEnable, CollisionEnable, MissileEnable, SuppressSubgrid, ShowFactionThreat, HideName;
         HudAPIv2.MenuItem LineEnableObs, SymbolEnableObs, LabelEnableObs, HideUnpowered, Reset, ServerReset, Blank, ResetConfirm;
         HudAPIv2.MenuItem LineEnableMissile, SymbolEnableMissile, OffscreenMissileEnable, OffscreenThreatEnable, OffscreenObstructionEnable, LabelUp, LabelDown;
-        HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum, RollupFac;
+        HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum, RollupFac, ThreatVec;
 
         HudAPIv2.MenuTextInput ObstructionRange, MissileText, OffscreenLength, OffscreenWidth, HideLabelThreshold, RWRTime, RollupMax;
         HudAPIv2.MenuColorPickerInput EnemyColor, ObsColor, MissileColor, NeutralColor, FriendlyColor, RWRColor;
@@ -319,6 +322,8 @@ namespace WCRadar
                 EnemyColor = new HudAPIv2.MenuColorPickerInput("Set enemy color >>", ThreatMenu, Settings.Instance.enemyColor, "Select color", ChangeEnemyColor);
                 NeutralColor = new HudAPIv2.MenuColorPickerInput("Set neutral color >>", ThreatMenu, Settings.Instance.neutralColor, "Select color", ChangeNeutralColor);
                 SpeedSetting = new HudAPIv2.MenuItem("Velocity shown as: " + (Settings.Instance.speedRel ? "Relative" : "Absolute"), ThreatMenu, ChangeSpeedType);
+                ThreatVec = new HudAPIv2.MenuItem("Show direction vectors on threats (WIP): " + Settings.Instance.showThreatVectors, ThreatMenu, ShowVecOnThreat);
+
 
             ObstructionMenu = new HudAPIv2.MenuSubCategory("Obstruction Display Options >>", SettingsMenu, "Obstruction Options");
                 LineEnableObs = new HudAPIv2.MenuItem("Show lines: " + Settings.Instance.enableLinesObs, ObstructionMenu, ShowLinesObs);
@@ -390,6 +395,12 @@ namespace WCRadar
             rollupText.Scale = Settings.Instance.rollupTextSize;
             rollupText.Visible = false;
             rollupText.Font = "monospace";
+        }
+
+        private void ShowVecOnThreat()
+        {
+            Settings.Instance.showThreatVectors = !Settings.Instance.showThreatVectors;
+            ThreatVec.Text = "Show direction vectors on threats (WIP): " + Settings.Instance.showThreatVectors;
         }
         private void FacRollup()
         {

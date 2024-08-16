@@ -38,7 +38,7 @@ namespace WCRadar
         internal MyStringId line = MyStringId.GetOrCompute("particle_laser"); //Square  GizmoDrawLine  particle_laser ReflectorConeNarrow
         internal MyStringId missileOutline = MyStringId.GetOrCompute("MissileOutline"); //Square  GizmoDrawLine  particle_laser ReflectorConeNarrow
         internal MyStringId frameCorner = MyStringId.GetOrCompute("FrameCorner"); //Square  GizmoDrawLine  particle_laser ReflectorConeNarrow
-
+        internal MyStringId dash = MyStringId.GetOrCompute("WCRadarDash"); //Square  GizmoDrawLine  particle_laser ReflectorConeNarrow
 
         internal Dictionary<MyEntity, int> rwrDict = new Dictionary<MyEntity, int>();
         internal ICollection<MyTuple<MyEntity, float>> threatList = new List<MyTuple<MyEntity, float>>();
