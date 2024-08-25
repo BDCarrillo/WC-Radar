@@ -34,6 +34,7 @@ namespace WCRadar
                     var playerPos = controlledGrid.PositionComp.WorldAABB.Center;
                     var Up = MyAPIGateway.Session.Camera.WorldMatrix.Up;
                     var lineScale = (float)(0.1 * Math.Tan(Session.Camera.FovWithZoom * 0.5));
+                    var fovScale = Session.Camera.FieldOfViewAngle / 70;
 
                     #region Obstructions
                     if (s.enableObstructions || s.enableAsteroids)
@@ -115,9 +116,8 @@ namespace WCRadar
                             {
                                 var culledStartDotPos = new Vector2D(screenCoords.X * lineScale * aspectRatio, screenCoords.Y * lineScale);
                                 var lineStartWorldPos = Vector3D.Transform(new Vector3D(culledStartDotPos.X, culledStartDotPos.Y, -0.1), camMat);
-
                                 var screenCoordsEnd = Vector3D.Transform(position + parentGrid.Physics.LinearVelocity, viewProjectionMat);
-                                MyTransparentGeometry.AddLineBillboard(screenCoordsEnd.Z > screenCoords.Z ? dash : corner, s.enemyColor, lineStartWorldPos, Vector3D.Normalize(parentGrid.Physics.LinearVelocity), 0.01f, 0.00025f);
+                                MyTransparentGeometry.AddLineBillboard(screenCoordsEnd.Z > screenCoords.Z ? dash : corner, s.enemyColor, lineStartWorldPos, Vector3D.Normalize(parentGrid.Physics.LinearVelocity), 0.01f * fovScale, 0.00025f * fovScale);
                             }
                             
                             /*
