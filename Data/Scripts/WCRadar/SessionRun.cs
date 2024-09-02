@@ -2,7 +2,6 @@
 using VRage.Game.Components;
 using VRage.Utils;
 using CoreSystems.Api;
-using VRage.Game.Entity;
 using Draygo.API;
 using Digi.Example_NetworkProtobuf;
 using Sandbox.Game;
@@ -91,18 +90,25 @@ namespace WCRadar
                 if (!hide && MyAPIGateway.Session.Config.HudState != 0 && hudAPI.Heartbeat)
                 {
                     var s = Settings.Instance;
-                    if (projInbound.Item1 && (s.enableMissileLines || s.enableMissileSymbols || s.enableMissileWarning))
-                        DrawMissile();
-                    if (threatListCleaned.Count > 0 || (obsListCleaned.Count > 0 && s.enableObstructions))
-                    {
-                        if (MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Control))
-                            ExpandedDraw();
-                        else
-                            ProcessDraws();
-                    }
 
-                    if (s.showRollup && rollupText != null)
-                        RollupData();
+                    if (controlledGrid?.IsPowered == true)
+                    {
+
+                        if (projInbound.Item1 && (s.enableMissileLines || s.enableMissileSymbols || s.enableMissileWarning))
+                            DrawMissile();
+                        if (threatListCleaned.Count > 0 || (obsListCleaned.Count > 0 && s.enableObstructions))
+                        {
+                            if (MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Control))
+                                ExpandedDraw();
+                            else
+                                ProcessDraws();
+                        }
+
+                        if (s.showRollup && rollupText != null)
+                            RollupData();
+                    }
+                    else if (s.showRollup && rollupText.Visible)
+                        rollupText.Visible = false;
                 }
                 tick++;                
             }
