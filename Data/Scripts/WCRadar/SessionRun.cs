@@ -90,8 +90,8 @@ namespace WCRadar
                 if (!hide && MyAPIGateway.Session.Config.HudState != 0 && hudAPI.Heartbeat)
                 {
                     var s = Settings.Instance;
-
-                    if (controlledGrid?.IsPowered == true)
+                    var seatTerm = Session?.Player?.Controller?.ControlledEntity as IMyTerminalBlock;                   
+                    if (seatTerm != null && seatTerm.IsWorking)
                     {
 
                         if (projInbound.Item1 && (s.enableMissileLines || s.enableMissileSymbols || s.enableMissileWarning))
