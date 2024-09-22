@@ -220,14 +220,14 @@ namespace Digi.Example_NetworkProtobuf
                         MyLog.Default.WriteLineAndConsole($"WC Radar: Received server RWR settings");
                         server = true;
                     }
+                    /*
                     string message = "WC Radar: ";
                     if (display)
                         message += "Received server default config.";
                     if (server)
                         message += "Received server block list.";
-                        
-
                     if(server || display)MyAPIGateway.Utilities.ShowNotification(message);
+                    */
                 }
                 catch (Exception e)
                 {

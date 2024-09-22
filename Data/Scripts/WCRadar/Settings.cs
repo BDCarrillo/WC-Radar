@@ -5,9 +5,6 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Configuration;
-using System.Reflection.Emit;
-using VRage.Input;
 using VRage.Utils;
 using VRageMath;
 

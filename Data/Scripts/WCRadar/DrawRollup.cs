@@ -25,7 +25,7 @@ namespace WCRadar
 
                     foreach (var targ in threatListCleaned)
                     {
-                        if (targ.entity.MarkedForClose || targ.entity.Closed || targ.blockCount < s.hideLabelBlockThreshold || s.hideUnpowered && targ.noPower) continue;
+                        if (targ.entity.MarkedForClose || targ.entity.Closed || targ.blockCount < s.hideLabelBlockThreshold || s.hideUnpowered && targ.noPower || !(targ.entity is MyCubeGrid)) continue;
                         var sortVal = Vector3D.Distance(targ.entity.PositionComp.WorldAABB.Center, controlledGrid.PositionComp.WorldAABB.Center);
 
                         sortList.Add(sortVal);

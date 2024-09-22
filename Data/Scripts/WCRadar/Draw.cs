@@ -32,7 +32,7 @@ namespace WCRadar
                         return;
                     }
                     var playerPos = controlledGrid.PositionComp.WorldAABB.Center;
-                    var Up = MyAPIGateway.Session.Camera.WorldMatrix.Up;
+                    var Up = Session.Camera.WorldMatrix.Up;
                     var lineScale = (float)(0.1 * Math.Tan(Session.Camera.FovWithZoom * 0.5));
                     var fovScale = Session.Camera.FieldOfViewAngle / 70;
 
