@@ -165,7 +165,7 @@ namespace WCRadar
                     {
                         wcAPi.GetObstructions(entity, obsList);
                         obsListCleaned = ValidateList(obsList, false);
-                    }
+                    }                    
                 }
             }
             catch (Exception e)
@@ -320,7 +320,7 @@ namespace WCRadar
                     contact.factionTag = factionTag;
                     contact.enemy = enemy;
                     contact.friendly = friendly;
-                    contact.blockCount = gridMy.BlocksCount;                        
+                    contact.blockCount = gridMy.BlocksCount;
                     ListCleaned.Add(contact);
                 }
                 catch (Exception e)

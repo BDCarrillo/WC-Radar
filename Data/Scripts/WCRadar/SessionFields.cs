@@ -60,6 +60,7 @@ namespace WCRadar
         internal List<double> sortList = new List<double>();
         internal Dictionary<double, ContactInfo> sortDict = new Dictionary<double, ContactInfo>();
         internal List<string> sortFakeEnum = new List<string>() { "Closest First", "Furthest First", "Closest then ID", "Furthest then ID" };
+        internal Vector3D[] corners = new Vector3D[8];
 
         private void Clean()
         { 
@@ -67,6 +68,7 @@ namespace WCRadar
             Networking = null;
             if (client)
             {
+                corners = null;
                 rwrDict.Clear();
                 threatList.Clear();
                 threatListEnt.Clear();

@@ -148,6 +148,8 @@ namespace WCRadar
         public bool rollupShowFac { get; set; } = true;
         [ProtoMember(44)]
         public bool showThreatVectors { get; set; } = false;
+        [ProtoMember(45)]
+        public bool disableConformal { get; set; } = false;
     }
     [ProtoContract]
     public class ServerSettings
@@ -301,7 +303,7 @@ namespace WCRadar
         HudAPIv2.MenuRootCategory SettingsMenu;
         HudAPIv2.MenuSubCategory ThreatMenu, ObstructionMenu, MissileMenu, OffscreenMenu, ConfirmReset, ResetServerConfirm, RWR, Rollup, SummaryListPos, LabelSize;
         HudAPIv2.MenuItem LineEnableThreat, SymbolEnableThreat, LabelEnableThreat, ObstructionEnable, AsteroidEnable, CollisionEnable, MissileEnable, SuppressSubgrid, ShowFactionThreat, HideName;
-        HudAPIv2.MenuItem LineEnableObs, SymbolEnableObs, LabelEnableObs, HideUnpowered, Reset, ServerReset, Blank, ResetConfirm;
+        HudAPIv2.MenuItem LineEnableObs, SymbolEnableObs, LabelEnableObs, HideUnpowered, Reset, ServerReset, Blank, ResetConfirm, DisableConformal;
         HudAPIv2.MenuItem LineEnableMissile, SymbolEnableMissile, OffscreenMissileEnable, OffscreenThreatEnable, OffscreenObstructionEnable, LabelUp, LabelDown;
         HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum, RollupFac, ThreatVec;
 
@@ -377,7 +379,7 @@ namespace WCRadar
             LabelSize = new HudAPIv2.MenuSubCategory("Change label text size >>", SettingsMenu, "Change label text size");
                 LabelUp = new HudAPIv2.MenuItem("Increase text size", LabelSize, UpSizeLabel);
                 LabelDown = new HudAPIv2.MenuItem("Decrease text size", LabelSize, DownSizeLabel);
-
+            DisableConformal = new HudAPIv2.MenuItem("Disable conformal box draws: " + Settings.Instance.disableConformal, SettingsMenu, ChangeConformal);
             Blank = new HudAPIv2.MenuItem("- - - - - - - - - - -", SettingsMenu, null);
             ConfirmReset = new HudAPIv2.MenuSubCategory("Reset to defaults", SettingsMenu, "Confirm");
             Reset = new HudAPIv2.MenuItem("Reset defaults", ConfirmReset, ResetDefaults);
@@ -392,6 +394,12 @@ namespace WCRadar
             rollupText.Scale = Settings.Instance.rollupTextSize;
             rollupText.Visible = false;
             rollupText.Font = "monospace";
+        }
+
+        private void ChangeConformal()
+        {
+            Settings.Instance.disableConformal = !Settings.Instance.disableConformal;
+            DisableConformal.Text = "Disable conformal box draws: " + Settings.Instance.disableConformal;
         }
 
         private void ShowVecOnThreat()
