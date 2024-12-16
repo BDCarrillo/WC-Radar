@@ -34,9 +34,10 @@ namespace WCRadar
                     /*
                     var playerPos = controlledGrid.PositionComp.WorldAABB.Center;
                     var Up = Session.Camera.WorldMatrix.Up;
+                    */
                     var lineScale = (float)(0.1 * Math.Tan(Session.Camera.FovWithZoom * 0.5));
                     var fovScale = Session.Camera.FieldOfViewAngle / 70;
-                    */
+
 
 
                     #region Combined
@@ -83,6 +84,8 @@ namespace WCRadar
 
                             if (offscreen) 
                                 continue;
+                            var parent = contact.entity.GetTopMostParent();
+                            var parentGrid = parent as MyCubeGrid;
 
                             //Basic corner
                             var topRightScreen = Vector3D.Transform(position + camMat.Up * objSize + camMat.Right * objSize, viewProjectionMat);
@@ -128,10 +131,17 @@ namespace WCRadar
                                 botLeftDraw = new Vector2D(screenCoords.X - offsetX + symHalfX, screenCoords.Y - offsetY + symHalfY);
                             }
 
+                            //Targ movement vector line
+                            if (i == 2 && s.showThreatVectors && parentGrid != null && parentGrid.Physics != null)
+                            {
+                                var culledStartDotPos = new Vector2D(screenCoords.X * lineScale * aspectRatio, screenCoords.Y * lineScale);
+                                var lineStartWorldPos = Vector3D.Transform(new Vector3D(culledStartDotPos.X, culledStartDotPos.Y, -0.1), camMat);
+                                var screenCoordsEnd = Vector3D.Transform(position + parentGrid.Physics.LinearVelocity, viewProjectionMat);
+                                MyTransparentGeometry.AddLineBillboard(screenCoordsEnd.Z > screenCoords.Z ? dash : corner, s.enemyColor, lineStartWorldPos, Vector3D.Normalize(parentGrid.Physics.LinearVelocity), 0.01f * fovScale, 0.00025f * fovScale);
+                            }
+
                             if (drawLabel)
                             {
-                                var parent = contact.entity.GetTopMostParent();
-                                var parentGrid = parent as MyCubeGrid;
                                 var distance = Vector3D.Distance(position, controlledGrid.PositionComp.WorldAABB.Center);
                                 var info = new StringBuilder($"<color={rgbColor.R}, {rgbColor.G}, {rgbColor.B}>");
                                 if (showFaction) info.AppendLine($"  {contact.factionTag}");

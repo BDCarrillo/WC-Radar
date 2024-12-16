@@ -245,6 +245,7 @@ namespace WCRadar
                         contactChar.entity = obj;
                         contactChar.enemy = enemy;
                         contactChar.friendly = friendly;
+                        contactChar.blockCount = int.MaxValue;
                         ListCleaned.Add(contactChar);
                         continue;
                     }
