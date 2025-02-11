@@ -196,9 +196,9 @@ namespace WCRadar
                     if (!isThreat)
                     {
                         var objPlanet = obj as MyPlanet;
-                        var objRoid = obj as MyVoxelBase;
                         if (objPlanet != null)
                             continue;
+                        var objRoid = obj as MyVoxelBase;
                         if (objRoid != null)
                         {
                             if (!Settings.Instance.enableAsteroids)
@@ -215,9 +215,6 @@ namespace WCRadar
                     }
                     IMyFaction faction = null;
                     var factionTag = "";
-                    bool enemy = false;
-                    bool friendly = false;
-
                     var objGrid = obj as MyCubeGrid;
                     if (objGrid == null)//Characters?
                     {
@@ -230,21 +227,19 @@ namespace WCRadar
                             var reputation = MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, faction.FactionId);
                             if (playerFaction == faction)
                             {
-                                friendly = true;
+                                contactChar.friendly = true;
                             }
                             else
                             {
-                                enemy = reputation < -500;
-                                friendly = reputation > 500;
+                                contactChar.enemy = reputation < -500;
+                                contactChar.friendly = reputation > 500;
                             }
                         }
                         else
                         {
-                            enemy = true;
+                            contactChar.enemy = true;
                         }
                         contactChar.entity = obj;
-                        contactChar.enemy = enemy;
-                        contactChar.friendly = friendly;
                         contactChar.blockCount = int.MaxValue;
                         ListCleaned.Add(contactChar);
                         continue;
@@ -290,6 +285,7 @@ namespace WCRadar
                     noPowerFound = powerDist.MaxAvailableResourceByType(GId, gridIMy) <= 0;
                     if (Settings.Instance.hideUnpowered && noPowerFound)
                         continue;
+                    var contact = new ContactInfo();
 
                     if (gridIMy.BigOwners != null && gridIMy.BigOwners.Count > 0)
                     {
@@ -300,27 +296,24 @@ namespace WCRadar
                             var reputation = MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, faction.FactionId);
                             if (playerFaction == faction)
                             {
-                                friendly = true;
+                                contact.friendly = true;
                             }
                             else
                             {
-                                enemy = reputation < -500;
-                                friendly = reputation > 500;
+                                contact.enemy = reputation < -500;
+                                contact.friendly = reputation > 500;
                             }
                         }
                         else
                         {
                             factionTag = "NONE";
-                            enemy = true;
+                            contact.enemy = true;
                         }
                     }                  
 
-                    var contact = new ContactInfo();
                     contact.entity = addEnt;
                     contact.noPower = noPowerFound;
                     contact.factionTag = factionTag;
-                    contact.enemy = enemy;
-                    contact.friendly = friendly;
                     contact.blockCount = gridMy.BlocksCount;
                     ListCleaned.Add(contact);
                 }
