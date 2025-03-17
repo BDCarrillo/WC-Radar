@@ -73,20 +73,21 @@ namespace WCRadar
                                 objSize *= 1.1f;
                             var grid = contact.entity as MyCubeGrid;
                             var rwr = rwrDict.ContainsKey(contact.entity);
+                            var parent = contact.entity.GetTopMostParent();
+                            var parentGrid = parent as MyCubeGrid;
+                            var focusSymbol = i == 2 ? parentGrid == focusTarget : false;
 
                             var screenCoords = Vector3D.Transform(position, viewProjectionMat);
                             var offscreen = screenCoords.X > 1 || screenCoords.X < -1 || screenCoords.Y > 1 || screenCoords.Y < -1 || screenCoords.Z > 1;
-                            var rgbColor = i == 1 ? contact.friendly ? s.friendlyColor : s.obsColor : rwr ? s.rwrColor : contact.enemy ? s.enemyColor : s.neutralColor;
-                            var drawColor = rgbColor.ToVector4();                         
+                            var rgbColor = i == 1 ? contact.friendly ? s.friendlyColor : s.obsColor : rwr ? s.rwrColor : focusSymbol ? s.focusColor : contact.enemy ? s.enemyColor : s.neutralColor;
+                            var drawColor = rgbColor.ToVector4();            
 
                             if (offscreen && drawOffScreen) 
                                 DrawScreenEdge(screenCoords, drawColor);
 
                             if (offscreen) 
                                 continue;
-                            var parent = contact.entity.GetTopMostParent();
-                            var parentGrid = parent as MyCubeGrid;
-
+                            
                             //Basic corner
                             var topRightScreen = Vector3D.Transform(position + camMat.Up * objSize + camMat.Right * objSize, viewProjectionMat);
                             var topRightDraw = new Vector2D(topRightScreen.X, topRightScreen.Y);
@@ -172,6 +173,11 @@ namespace WCRadar
                                     var botRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, botRightDraw, drawColor, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 3.14159f, HideHud: true, Shadowing: true);
                                     var botLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, botLeftDraw, drawColor, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: -1.5708f, HideHud: true, Shadowing: true);
                                 }
+                                if (focusSymbol)
+                                {
+                                    var angle = (tick % 100) * .015708f;
+                                    var focusSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, new Vector2D(screenCoords.X, screenCoords.Y), drawColor, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: angle, HideHud: true, Shadowing: true);
+                                }
                             }
 
                             if (drawLine)
@@ -186,163 +192,6 @@ namespace WCRadar
                         }
                     }
                     #endregion
-                    /*
-
-                    #region Obstructions
-                    if (s.enableObstructions || s.enableAsteroids)
-                    {
-                        foreach (var obs in obsListCleaned)
-                        {
-                            try
-                            {
-                                if (obs.entity.MarkedForClose || obs.entity.Closed || obs.blockCount < s.hideLabelBlockThreshold) continue;
-                                var position = obs.entity.PositionComp.WorldAABB.Center;
-                                var obsSize = obs.entity.PositionComp.LocalVolume.Radius;
-                                var voxel = obs.entity as MyVoxelBase;
-                                if (voxel != null)
-                                    obsSize *= 0.5f; //Since 'roid LocalVolumes can be massive.  Unsure if there's a more accurate source of size or center point of actual voxel material                                
-                                else
-                                    obsSize *= 1.1f;
-                                var grid = obs.entity as MyCubeGrid;
-
-                                var screenCoords = Vector3D.Transform(position, viewProjectionMat);
-                                var offscreen = screenCoords.X > 1 || screenCoords.X < -1 || screenCoords.Y > 1 || screenCoords.Y < -1 || screenCoords.Z > 1;
-                                var topRightScreen = Vector3D.Transform(position + camMat.Up * obsSize + camMat.Right * obsSize, viewProjectionMat);
-                                var offsetX = topRightScreen.X - screenCoords.X;
-                                if (offsetX < symbolWidth * 0.55f)
-                                    topRightScreen = new Vector3D(screenCoords.X + symbolWidth * 0.5, screenCoords.Y + symbolWidth, screenCoords.Z);
-
-                                if (s.enableObstructionOffScreen && offscreen && Vector3D.DistanceSquared(position, controlledGrid.PositionComp.WorldAABB.Center) >= 90000)
-                                    DrawScreenEdge(screenCoords, obs.friendly ? s.friendlyColor.ToVector4() : s.obsColor.ToVector4());
-                                if (s.enableSymbolsObs && !offscreen)
-                                    DrawFrame(topRightScreen, screenCoords, obs.friendly ? s.friendlyColor.ToVector4() : s.obsColor.ToVector4(), grid, viewProjectionMat);
-                                if (s.enableLinesObs)
-                                    DrawLine(position, line, obs.friendly ? s.friendlyColor.ToVector4() : s.obsColor.ToVector4());
-
-                                if (s.enableCollisionWarning && controlledGrid.LinearVelocity.LengthSquared() > 10) //TODO take a look at dampening these messages or intermittently flash them?
-                                {
-                                    var shipDir = Vector3D.Normalize(controlledGrid.LinearVelocity);
-                                    var shipDirRay = new RayD(controlledGrid.PositionComp.WorldAABB.Center, shipDir);
-                                    if (shipDirRay.Intersects(obs.entity.PositionComp.WorldAABB) <= controlledGrid.LinearVelocity.Length() * 30 || obs.entity.PositionComp.WorldAABB.Contains(controlledGrid.PositionComp.WorldAABB) != ContainmentType.Disjoint)
-                                        MyAPIGateway.Utilities.ShowNotification("!! Collision Warning !!", 14, "Red");
-                                }
-
-                                if (s.enableLabelsObs && !offscreen)
-                                {
-                                    var parent = obs.entity.GetTopMostParent();
-                                    var parentGrid = parent as MyCubeGrid;
-                                    DrawLabel(parentGrid, position, parent, obs.friendly ? s.friendlyColor.ToVector4() : s.obsColor.ToVector4(), false, "", obs.noPower, new Vector2D(topRightScreen.X, topRightScreen.Y));
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                MyLog.Default.Error($"[WC Radar] Error while trying to draw obstructions {e}");
-                                continue;
-                            }
-                        }
-                    }
-                    #endregion
-
-                    #region Threats
-                    foreach (var targ in threatListCleaned)
-                    {
-                        try
-                        {
-                            if (targ.entity.MarkedForClose || targ.entity.Closed || targ.blockCount < s.hideLabelBlockThreshold) continue;
-                            var parent = targ.entity.GetTopMostParent();
-                            var parentGrid = parent as MyCubeGrid;
-                            var position = parent.PositionComp.WorldAABB.Center;
-                            var screenCoords = Vector3D.Transform(position, viewProjectionMat);
-                            var offscreen = screenCoords.X > 1 || screenCoords.X < -1 || screenCoords.Y > 1 || screenCoords.Y < -1 || screenCoords.Z > 1;
-                            var targSize = parent.PositionComp.LocalVolume.Radius;
-                            targSize *= 1.1f;
-                            var topRightScreen = Vector3D.Transform(position + camMat.Up * targSize + camMat.Right * targSize, viewProjectionMat);
-                            var offsetX = topRightScreen.X - screenCoords.X;
-                            var rwr = rwrDict.ContainsKey(targ.entity);
-                            if (offsetX < symbolWidth * 0.55f)
-                                topRightScreen = new Vector3D(screenCoords.X + symbolWidth * 0.5, screenCoords.Y + symbolWidth, screenCoords.Z);
-
-                            
-                            //Targ movement vector line                            
-                            if (s.showThreatVectors && !offscreen && parentGrid.Physics != null)
-                            {
-                                var culledStartDotPos = new Vector2D(screenCoords.X * lineScale * aspectRatio, screenCoords.Y * lineScale);
-                                var lineStartWorldPos = Vector3D.Transform(new Vector3D(culledStartDotPos.X, culledStartDotPos.Y, -0.1), camMat);
-                                var screenCoordsEnd = Vector3D.Transform(position + parentGrid.Physics.LinearVelocity, viewProjectionMat);
-                                MyTransparentGeometry.AddLineBillboard(screenCoordsEnd.Z > screenCoords.Z ? dash : corner, s.enemyColor, lineStartWorldPos, Vector3D.Normalize(parentGrid.Physics.LinearVelocity), 0.01f * fovScale, 0.00025f * fovScale);
-                            }
-
-                            if (s.enableThreatOffScreen && offscreen)
-                                DrawScreenEdge(screenCoords, rwr ? s.rwrColor.ToVector4() : targ.enemy ? s.enemyColor.ToVector4() : s.neutralColor.ToVector4());
-                            if (s.enableLinesThreat)
-                                DrawLine(position, line, rwr ? s.rwrColor.ToVector4() : targ.enemy ? s.enemyColor.ToVector4() : s.neutralColor.ToVector4());
-                            if (s.enableSymbolsThreat && !offscreen)
-                                DrawFrame(topRightScreen, screenCoords, rwr ? s.rwrColor.ToVector4() : targ.enemy ? s.enemyColor.ToVector4() : s.neutralColor.ToVector4(), parentGrid, viewProjectionMat);
-                            if (s.enableLabelsThreat && !offscreen)
-                                DrawLabel(parentGrid, position, parent, rwr ? s.rwrColor.ToVector4() : targ.enemy ? s.enemyColor.ToVector4() : s.neutralColor.ToVector4(), s.showFactionThreat, targ.factionTag, targ.noPower, new Vector2D(topRightScreen.X, topRightScreen.Y));
-                        }
-                        catch (Exception e)
-                        {
-                            MyLog.Default.Error($"[WC Radar] Error while trying to draw threats {e}");
-                            continue;
-                        }
-                    }
-                    #endregion
-
-                    #region RWR
-                    if (!s.rwrDisable)
-                    {
-                        bool display = false;
-                        var message = new StringBuilder();
-                        message.Append($"<color={s.rwrColor.R},{s.rwrColor.G},{s.rwrColor.B}>");
-
-                        if (serverSuppress) //Limited draw for RWR only
-                        {
-                            foreach (var contact in rwrDict)
-                            {
-                                if (contact.Value + s.rwrDisplayTimeTicks > tick)
-                                {
-                                    display = true;
-                                    message.AppendLine($"Target Locked by {contact.Key.DisplayName}");
-                                }
-                                try
-                                {
-                                    if (contact.Key.MarkedForClose || contact.Key.Closed) continue;
-                                    var parent = contact.Key.GetTopMostParent();
-                                    var parentGrid = parent as MyCubeGrid;
-                                    var position = parent.PositionComp.WorldAABB.Center;
-                                    var screenCoords = Vector3D.Transform(position, viewProjectionMat);
-                                    var offscreen = screenCoords.X > 1 || screenCoords.X < -1 || screenCoords.Y > 1 || screenCoords.Y < -1 || screenCoords.Z > 1;
-                                    var targSize = parent.PositionComp.LocalVolume.Radius;
-                                    targSize *= 1.1f;
-                                    var topRightScreen = Vector3D.Transform(position + camMat.Up * targSize + camMat.Right * targSize, viewProjectionMat);
-                                    var offsetX = topRightScreen.X - screenCoords.X;
-                                    if (offsetX < symbolWidth * 0.55f)
-                                        topRightScreen = new Vector3D(screenCoords.X + symbolWidth * 0.5, screenCoords.Y + symbolWidth, screenCoords.Z);
-
-                                    if (offscreen)
-                                        DrawScreenEdge(screenCoords, s.rwrColor.ToVector4());
-                                    else
-                                    {
-                                        DrawFrame(topRightScreen, screenCoords, s.rwrColor.ToVector4(), parentGrid, viewProjectionMat);
-                                        DrawLabel(parentGrid, position, parent, s.rwrColor.ToVector4(), false, "", false, new Vector2D(topRightScreen.X, topRightScreen.Y));
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                    MyLog.Default.Error($"[WC Radar] Error while trying to draw threats {e}");
-                                    continue;
-                                }
-                            }
-                        }
-                        if (display)
-                        {
-                            var warning = new HudAPIv2.HUDMessage(message, new Vector2D(-0.11, -0.6), null, 2, s.labelTextSize * 1.25f, true, true, Color.Black);
-                            warning.Visible = true;
-                        }
-                    }
-                    #endregion
-                    */
                 }
             }
             catch (Exception e)
@@ -350,24 +199,6 @@ namespace WCRadar
                 controlledGrid = null;
                 MyLog.Default.Error($"[WC Radar] Error while trying to draw {e}");
             }
-        }
-        private void DrawLabel(MyCubeGrid parentGrid, Vector3D position, MyEntity parent, Color color, bool showFaction, string factionTag, bool noPower, Vector2D labelposition)
-        {           
-            var distance = Vector3D.Distance(position, controlledGrid.PositionComp.WorldAABB.Center);
-            var info = new StringBuilder($"<color={color.R}, {color.G}, {color.B}>");
-            if (showFaction && factionTag != "") info.AppendLine($"  {factionTag}");
-            if (!Settings.Instance.hideName && parent.DisplayName != null) info.AppendLine($"  {parent.DisplayName}");
-            if (noPower) info.AppendLine($"  No Pwr");
-            info.AppendLine($"  {(distance > 1000 ? (distance / 1000).ToString("0.0") + " km" : (int)distance + " m")}");
-            if (parentGrid != null)
-            {
-                if (Settings.Instance.speedRel)
-                    info.AppendLine($"  ^{(int)(controlledGrid.LinearVelocity - parentGrid.LinearVelocity).Length()} m/s");
-                else
-                    info.AppendLine($"  {(int)parentGrid.LinearVelocity.Length()} m/s");
-            }
-            var label = new HudAPIv2.HUDMessage(info, labelposition, null, 2, Settings.Instance.labelTextSize, true, true);
-            label.Visible = true;
         }
         private void DrawLine(Vector3D position, MyStringId texture, Vector4 color)
         {
@@ -383,72 +214,6 @@ namespace WCRadar
             var dirToTarg = Vector3D.Normalize(position - controlledGrid.PositionComp.WorldAABB.Center);
             var offsetStart = controlledGrid.PositionComp.WorldAABB.Center + dirToTarg * lineOffset;
             MySimpleObjectDraw.DrawLine(offsetStart, offsetStart + dirToTarg * lineLength, texture, ref color, 1, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
-        }
-        private void DrawFrame(Vector3D topRight, Vector3D center, Vector4 rawColor, MyCubeGrid grid, MatrixD viewProjectionMat)
-        {
-            var color = rawColor * 0.95f;
-            var offsetX = topRight.X - center.X;
-            if (offsetX > symbolWidth * 0.55f)
-            {
-                if (!Settings.Instance.disableConformal && grid != null) //Conformal
-                {
-                    double minY = 1;
-                    double maxY = -1;
-                    double minX = 1;
-                    double maxX = -1;
-                    
-                    var obb = new MyOrientedBoundingBoxD(grid.PositionComp.LocalAABB, grid.PositionComp.WorldMatrixRef);
-                    var corners = new Vector3D[8];
-                    obb.GetCorners(corners, 0);
-
-                    foreach (var corner in corners)
-                    {
-                        var screenCoords = Vector3D.Transform(corner, viewProjectionMat);
-                        if (screenCoords.Y < minY)
-                            minY = screenCoords.Y;
-
-                        if (screenCoords.Y > maxY)
-                            maxY = screenCoords.Y;
-
-                        if (screenCoords.X < minX)
-                            minX = screenCoords.X;
-
-                        if (screenCoords.X > maxX)
-                            maxX = screenCoords.X;
-                        //DrawSingleVec(corner, 1, Color.Red);
-                    }
-                    var topRightDraw = new Vector2D(maxX, maxY);
-                    var topLeftDraw = new Vector2D(minX, maxY);
-                    var botRightDraw = new Vector2D(maxX, minY);
-                    var botLeftDraw = new Vector2D(minX, minY);
-
-
-                    var topLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, topLeftDraw, color, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 0, HideHud: true, Shadowing: true);
-                    var topRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, topRightDraw, color, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 1.5708f, HideHud: true, Shadowing: true);
-                    var botRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, botRightDraw, color, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 3.14159f, HideHud: true, Shadowing: true);
-                    var botLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, botLeftDraw, color, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: -1.5708f, HideHud: true, Shadowing: true);
-
-                }
-                else //Original
-                {
-                    var offsetY = topRight.Y - center.Y;
-                    var symHalfX = symbolWidth * 0.25f;
-                    var symHalfY = symbolHeight * 0.25f;
-                    var topRightDraw = new Vector2D(topRight.X - symHalfX, topRight.Y - symHalfY);
-                    var topLeftDraw = new Vector2D(center.X - offsetX + symHalfX, center.Y + offsetY - symHalfY);
-                    var botRightDraw = new Vector2D(center.X + offsetX - symHalfX, center.Y - offsetY + symHalfY);
-                    var botLeftDraw = new Vector2D(center.X - offsetX + symHalfX, center.Y - offsetY + symHalfY);
-
-                    var topLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, topLeftDraw, color, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 0, HideHud: true, Shadowing: true);
-                    var topRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, topRightDraw, color, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 1.5708f, HideHud: true, Shadowing: true);
-                    var botRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, botRightDraw, color, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 3.14159f, HideHud: true, Shadowing: true);
-                    var botLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, botLeftDraw, color, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: -1.5708f, HideHud: true, Shadowing: true);
-                }
-            }
-            else
-            {
-                var ctrSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, new Vector2D(center.X, center.Y), color, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: 0, HideHud: true, Shadowing: true);
-            }
         }
         private void DrawScreenEdge(Vector3D screenCoords, Vector4 color)
         {

@@ -58,6 +58,7 @@ namespace WCRadar
             labelTextSize = 1f,
             rollupShowFac = true,
             showThreatVectors = false,
+            focusColor = Color.MediumVioletRed,
         };
 
         [ProtoMember(1)]
@@ -152,6 +153,8 @@ namespace WCRadar
         public bool disableConformal { get; set; } = false;
         [ProtoMember(46)]
         public bool cycleExpandedView { get; set; } = false;
+        [ProtoMember(47)]
+        public Color focusColor { get; set; } = Color.MediumVioletRed;
     }
     [ProtoContract]
     public class ServerSettings
@@ -286,6 +289,7 @@ namespace WCRadar
                 if (settings.OffScreenIndicatorThick == 0 || settings.OffScreenIndicatorThick == 0.0003f) settings.OffScreenIndicatorThick = 0.01f;
                 if (settings.rwrDisplayTimeTicks == 0) settings.rwrDisplayTimeTicks = Settings.Default.rwrDisplayTimeTicks;
                 if (settings.rwrColor.PackedValue == 0) settings.rwrColor = Settings.Default.rwrColor;
+                if (settings.focusColor.PackedValue == 0) settings.focusColor = Settings.Default.focusColor;
 
                 if (client)
                 {
@@ -310,7 +314,7 @@ namespace WCRadar
         HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum, RollupFac, ThreatVec, ExpandedCycle;
 
         HudAPIv2.MenuTextInput ObstructionRange, MissileText, OffscreenLength, OffscreenWidth, HideLabelThreshold, RWRTime, RollupMax;
-        HudAPIv2.MenuColorPickerInput EnemyColor, ObsColor, MissileColor, NeutralColor, FriendlyColor, RWRColor;
+        HudAPIv2.MenuColorPickerInput EnemyColor, ObsColor, MissileColor, NeutralColor, FriendlyColor, RWRColor, FocusColor;
         
         private void InitMenu()//callback
         {
@@ -319,11 +323,12 @@ namespace WCRadar
                 LineEnableThreat = new HudAPIv2.MenuItem("Show lines: " + Settings.Instance.enableLinesThreat, ThreatMenu, ShowLinesThreat);
                 SymbolEnableThreat = new HudAPIv2.MenuItem("Show symbols: " + Settings.Instance.enableSymbolsThreat, ThreatMenu, ShowSymbolsThreat);
                 LabelEnableThreat = new HudAPIv2.MenuItem("Show labels: " + Settings.Instance.enableLabelsThreat, ThreatMenu, ShowLabelsThreat);
-                ShowFactionThreat = new HudAPIv2.MenuItem("Show faction on label: " + Settings.Instance.showFactionThreat, ThreatMenu, ShowFactionOnThreat);
+                ShowFactionThreat = new HudAPIv2.MenuItem("Show faction on label: " + Settings.Instance.showFactionThreat, ThreatMenu, ShowFactionOnThreat);    
                 EnemyColor = new HudAPIv2.MenuColorPickerInput("Set enemy color >>", ThreatMenu, Settings.Instance.enemyColor, "Select color", ChangeEnemyColor);
                 NeutralColor = new HudAPIv2.MenuColorPickerInput("Set neutral color >>", ThreatMenu, Settings.Instance.neutralColor, "Select color", ChangeNeutralColor);
+                FocusColor = new HudAPIv2.MenuColorPickerInput("Set focus color >>", ThreatMenu, Settings.Instance.focusColor, "Select color", ChangeFocusColor);
                 SpeedSetting = new HudAPIv2.MenuItem("Velocity shown as: " + (Settings.Instance.speedRel ? "Relative" : "Absolute"), ThreatMenu, ChangeSpeedType);
-                ThreatVec = new HudAPIv2.MenuItem("Show direction vectors on threats (WIP): " + Settings.Instance.showThreatVectors, ThreatMenu, ShowVecOnThreat);
+                ThreatVec = new HudAPIv2.MenuItem("Show direction vectors on threats: " + Settings.Instance.showThreatVectors, ThreatMenu, ShowVecOnThreat);
 
 
             ObstructionMenu = new HudAPIv2.MenuSubCategory("Obstruction Display Options >>", SettingsMenu, "Obstruction Options");
@@ -413,7 +418,7 @@ namespace WCRadar
         private void ShowVecOnThreat()
         {
             Settings.Instance.showThreatVectors = !Settings.Instance.showThreatVectors;
-            ThreatVec.Text = "Show direction vectors on threats (WIP): " + Settings.Instance.showThreatVectors;
+            ThreatVec.Text = "Show direction vectors on threats: " + Settings.Instance.showThreatVectors;
         }
         private void FacRollup()
         {
@@ -589,6 +594,10 @@ namespace WCRadar
         private void ChangeNeutralColor(Color obj)
         {
             Settings.Instance.neutralColor = obj;
+        }
+        private void ChangeFocusColor(Color obj)
+        {
+            Settings.Instance.focusColor = obj;
         }
         private void ChangeFriendlyColor(Color obj)
         {

@@ -93,6 +93,7 @@ namespace WCRadar
                     var seatTerm = Session?.Player?.Controller?.ControlledEntity as IMyTerminalBlock;                   
                     if (seatTerm != null && seatTerm.IsWorking)
                     {
+                        focusTarget = wcAPi.GetAiFocus(controlledGrid)?.GetTopMostParent();
 
                         if (projInbound.Item1 && (s.enableMissileLines || s.enableMissileSymbols || s.enableMissileWarning))
                             DrawMissile();

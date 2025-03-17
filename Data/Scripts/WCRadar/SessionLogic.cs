@@ -45,6 +45,7 @@ namespace WCRadar
                         trackedRWRBlock = null;
                         serverSuppressRWR = true;
                     }
+                    focusTarget = null;
                     return;
                 }
                 else

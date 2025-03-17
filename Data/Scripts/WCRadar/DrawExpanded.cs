@@ -42,6 +42,7 @@ namespace WCRadar
                         {
                             if (targ.entity.MarkedForClose || targ.entity.Closed) continue;
                             var parent = targ.entity.GetTopMostParent();
+                            var focus = focusTarget == parent;
                             var position = parent.PositionComp.WorldAABB.Center;
                             var screenCoords = Vector3D.Transform(position, viewProjectionMat);
                             var offscreen = screenCoords.X > 1 || screenCoords.X < -1 || screenCoords.Y > 1 || screenCoords.Y < -1 || screenCoords.Z > 1;
@@ -55,14 +56,14 @@ namespace WCRadar
 
                             if (ctrscreen)
                             {
-                                var labelString = (targ.factionTag.Length > 0? targ.factionTag + " - " : "") + parent.DisplayName + (targ.noPower ? " - No Power" : "");
+                                var labelString = (targ.factionTag.Length > 0? targ.factionTag + " - " : "") + parent.DisplayName + (targ.noPower ? " - No Pwr" : "");
                                 var textTopLeft = new Vector2D(topRightScreen.X + 0.05, topRightScreen.Y + 1.05);
                                 var temp = new expandedMark()
                                 {
                                     topRight = new Vector2D(topRightScreen.X, topRightScreen.Y),
                                     screenCoordsZ = screenCoords.Z,
                                     worldCtr = position,
-                                    color = targ.enemy ? s.enemyColor : s.neutralColor,
+                                    color = focus ? s.focusColor : targ.enemy ? s.enemyColor : s.neutralColor,
                                     label = labelString,
                                     screenCoordsCtr = new Vector2D(screenCoords.X, screenCoords.Y),
                                     textTopLeft = textTopLeft
@@ -139,13 +140,12 @@ namespace WCRadar
             //Take 2: Don't like that this one can get swamped by other billboards/effects or obscured by your grid
             var distance = Vector3D.Distance(mark.worldCtr, playerPos);
             var thickness = (float)distance * 0.002f * Session.Camera.FieldOfViewAngle / 70;
-            var start = mark.worldCtr;// Vector3D.Transform(new Vector3D(mark.topRight.X, mark.topRight.Y, mark.screenCoordsZ), worldProjectionMat);
+            var start = mark.worldCtr;
             var end = Vector3D.Transform(new Vector3D(mark.textTopLeft.X, mark.textTopLeft.Y-1, mark.screenCoordsZ), worldProjectionMat);
             var dir = end - start;
             var length = (float)dir.Normalize();
 
             var color = mark.color.ToVector4();
-            //MySimpleObjectDraw.DrawLine(start, end, line, ref color, thickness);
             MyTransparentGeometry.AddLineBillboard(corner, mark.color, start, dir, length, thickness, VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop, intensity: 5); //was line type            
 
             var info = new StringBuilder($"<color={mark.color.R}, {mark.color.G}, {mark.color.B}>");
@@ -153,16 +153,17 @@ namespace WCRadar
             info.Append($" - {(distance > 1000 ? (distance / 1000).ToString("0.0") + " km" : (int)distance + " m")}");
             var textLocation = mark.textTopLeft;
             textLocation.Y -= 0.985;
-            //var shadowOffset = new Vector2D(0.002 / aspectRatio, -0.002 / aspectRatio);
-            //var shadowLabel = new HudAPIv2.HUDMessage(info, textLocation, shadowOffset, 2, 1, true);
-            //shadowLabel.InitialColor = Color.Black;
-            //shadowLabel.Visible = false;
-            //var info2 = new StringBuilder($"<color={mark.color.R}, {mark.color.G}, {mark.color.B}>" + info);
             var label = new HudAPIv2.HUDMessage(info, textLocation, null, 2, 1, true, true);
             label.Visible = true;
 
             //Mini frame draw
             var ctrSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, mark.screenCoordsCtr, mark.color, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: 0, HideHud: true, Shadowing: true);
+
+            if (mark.color == Settings.Instance.focusColor)
+            {
+                var angle = (tick % 100) * .015708f;
+                var focusSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, mark.screenCoordsCtr, mark.color, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: angle, HideHud: true, Shadowing: true);
+            }
         }
     }
 }

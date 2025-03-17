@@ -61,6 +61,7 @@ namespace WCRadar
         internal Dictionary<double, ContactInfo> sortDict = new Dictionary<double, ContactInfo>();
         internal List<string> sortFakeEnum = new List<string>() { "Closest First", "Furthest First", "Closest then ID", "Furthest then ID" };
         internal Vector3D[] corners = new Vector3D[8];
+        internal MyEntity focusTarget = null;
 
         private void Clean()
         { 
@@ -80,6 +81,7 @@ namespace WCRadar
                 controlledGrid = null;
                 trackedBlock = null;
                 trackedRWRBlock = null;
+                focusTarget = null;
                 Save(Settings.Instance);
 
                 if (wcAPi != null)

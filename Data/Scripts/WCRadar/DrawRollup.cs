@@ -57,6 +57,7 @@ namespace WCRadar
                 {
                     var targ = sortDict[sortList[i]];
                     var targGrid = targ.entity as MyCubeGrid;
+                    var focus = focusTarget == targGrid;
                     var name = targ.entity.EntityId.ToString().Substring(0, 4);
                     if (updateText)
                     {
@@ -67,14 +68,14 @@ namespace WCRadar
                             speedStr = $"^{(int)(controlledGrid.LinearVelocity - targGrid.LinearVelocity).Length()} m/s";
                         else
                             speedStr = $"{(int)targGrid.LinearVelocity.Length()} m/s";
-                        var color = rwrDict.ContainsKey(targ.entity) ? s.rwrColor : targ.enemy ? s.enemyColor : s.neutralColor;
+                        var color = focus ? s.focusColor : rwrDict.ContainsKey(targ.entity) ? s.rwrColor : targ.enemy ? s.enemyColor : s.neutralColor;
                         info.AppendLine($"<color={color.R}, {color.G}, {color.B}> {(s.rollupShowNum ? name + " - " : "")}{(s.rollupShowFac && targ.factionTag != "" ? targ.factionTag + " - " : "")}{targGrid.DisplayName} - {distStr} - {speedStr}{(targ.noPower ? " - NO PWR" : "")}");
                     }
 
                     //Draw the corresponding number
                     if (s.rollupShowNum)
                     {
-                        var color2 = rwrDict.ContainsKey(targ.entity) ? s.rwrColor : targ.enemy ? s.enemyColor : s.neutralColor;
+                        var color2 = focus ? s.focusColor : rwrDict.ContainsKey(targ.entity) ? s.rwrColor : targ.enemy ? s.enemyColor : s.neutralColor;
                         var position = targGrid.PositionComp.WorldAABB.Center;
                         var targSize = targGrid.PositionComp.LocalVolume.Radius;
                         targSize *= 1.1f;
