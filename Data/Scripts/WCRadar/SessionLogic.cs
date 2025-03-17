@@ -187,148 +187,127 @@ namespace WCRadar
 
             foreach (var obj in list)
             {
-                try
+                if (ListChecked.Contains(obj))
+                    continue;
+                ListChecked.Add(obj);
+
+                if (!isThreat)
                 {
-                    if (ListChecked.Contains(obj))
+                    var objPlanet = obj as MyPlanet;
+                    if (objPlanet != null)
                         continue;
-                    ListChecked.Add(obj);
-
-                    if (!isThreat)
+                    var objRoid = obj as MyVoxelBase;
+                    if (objRoid != null)
                     {
-                        var objPlanet = obj as MyPlanet;
-                        var objRoid = obj as MyVoxelBase;
-                        if (objPlanet != null)
+                        if (!Settings.Instance.enableAsteroids)
                             continue;
-                        if (objRoid != null)
+                        if (Vector3D.DistanceSquared(obj.PositionComp.WorldAABB.Center, gridPos) < obsDistSqr)
                         {
-                            if (!Settings.Instance.enableAsteroids)
-                                continue;
-                            if (Vector3D.DistanceSquared(obj.PositionComp.WorldAABB.Center, gridPos) < obsDistSqr)
-                            {
-                                var contactNotThreat = new ContactInfo();
-                                contactNotThreat.entity = obj;
-                                contactNotThreat.blockCount = int.MaxValue;
-                                ListCleaned.Add(contactNotThreat);
-                            }
-                            continue;
+                            var contactNotThreat = new ContactInfo();
+                            contactNotThreat.entity = obj;
+                            contactNotThreat.blockCount = int.MaxValue;
+                            ListCleaned.Add(contactNotThreat);
                         }
-                    }
-                    IMyFaction faction = null;
-                    var factionTag = "";
-                    bool enemy = false;
-                    bool friendly = false;
-
-                    var objGrid = obj as MyCubeGrid;
-                    if (objGrid == null)//Characters?
-                    {
-                        var character = obj as IMyCharacter;
-                        if (character == null) continue;
-                        var contactChar = new ContactInfo();
-                        faction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(character.ControllerInfo.ControllingIdentityId);
-                        if (faction != null)
-                        {
-                            var reputation = MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, faction.FactionId);
-                            if (playerFaction == faction)
-                            {
-                                friendly = true;
-                            }
-                            else
-                            {
-                                enemy = reputation < -500;
-                                friendly = reputation > 500;
-                            }
-                        }
-                        else
-                        {
-                            enemy = true;
-                        }
-                        contactChar.entity = obj;
-                        contactChar.enemy = enemy;
-                        contactChar.friendly = friendly;
-                        contactChar.blockCount = int.MaxValue;
-                        ListCleaned.Add(contactChar);
                         continue;
                     }
-                    else if (!Settings.Instance.enableObstructions)
-                        continue;
-
-                    MyEntity addEnt = obj;
-                    if (Settings.Instance.suppressSubgrids)
-                    {
-                        ListTemp.Clear();
-                        foreach (var checkObj in list)
-                        {
-                            if (obj == checkObj || ListChecked.Contains(checkObj)) continue;
-                            var checkGrid = checkObj as MyCubeGrid;
-
-                            if (checkGrid != null && objGrid.IsInSameLogicalGroupAs(checkGrid))
-                            {
-                                ListTemp.Add(checkGrid);
-                                ListChecked.Add(checkGrid);
-                            }
-                        }
-
-                        if (ListTemp.Count > 0)
-                        {
-                            float largestSize = obj.PositionComp.LocalVolume.Radius;
-                            foreach (var temp in ListTemp)
-                            {
-                                if (temp.PositionComp.LocalVolume.Radius > largestSize)
-                                {
-                                    largestSize = temp.PositionComp.LocalVolume.Radius;
-                                    addEnt = temp;
-                                }
-                            }
-                        }
-                    }
-
-                    bool noPowerFound = true;
-                    var gridIMy = addEnt as IMyCubeGrid;
-                    var gridMy = addEnt as MyCubeGrid;
-                    if (gridIMy.MarkedForClose || gridIMy.Closed) continue;
-                    var powerDist = (MyResourceDistributorComponent)gridIMy.ResourceDistributor;
-                    noPowerFound = powerDist.MaxAvailableResourceByType(GId, gridIMy) <= 0;
-                    if (Settings.Instance.hideUnpowered && noPowerFound)
-                        continue;
-
-                    if (gridIMy.BigOwners != null && gridIMy.BigOwners.Count > 0)
-                    {
-                        faction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(gridIMy.BigOwners[0]);
-                        if (faction != null)
-                        {
-                            factionTag = faction.Tag;
-                            var reputation = MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, faction.FactionId);
-                            if (playerFaction == faction)
-                            {
-                                friendly = true;
-                            }
-                            else
-                            {
-                                enemy = reputation < -500;
-                                friendly = reputation > 500;
-                            }
-                        }
-                        else
-                        {
-                            factionTag = "NONE";
-                            enemy = true;
-                        }
-                    }                  
-
-                    var contact = new ContactInfo();
-                    contact.entity = addEnt;
-                    contact.noPower = noPowerFound;
-                    contact.factionTag = factionTag;
-                    contact.enemy = enemy;
-                    contact.friendly = friendly;
-                    contact.blockCount = gridMy.BlocksCount;
-                    ListCleaned.Add(contact);
                 }
-                catch (Exception e)
+                IMyFaction faction = null;
+                var factionTag = "";
+                var objGrid = obj as MyCubeGrid;
+                if (objGrid == null)//Characters?
                 {
-                    MyLog.Default.Error($"[WC Radar] Exception in Validate {e}");
+                    var character = obj as IMyCharacter;
+                    if (character == null) continue;
+                    var contactChar = new ContactInfo();
+                    faction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(character.ControllerInfo.ControllingIdentityId);
+                    if (faction != null)
+                    {
+                        var reputation = MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, faction.FactionId);
+                        if (playerFaction == faction)
+                            contactChar.friendly = true;
+                        else
+                        {
+                            contactChar.enemy = reputation < -500;
+                            contactChar.friendly = reputation > 500;
+                        }
+                    }
+                    else
+                        contactChar.enemy = true;
+                    contactChar.entity = obj;
+                    contactChar.blockCount = int.MaxValue;
+                    ListCleaned.Add(contactChar);
                     continue;
                 }
+                else if (!Settings.Instance.enableObstructions)
+                    continue;
+
+                MyEntity addEnt = obj;
+                if (Settings.Instance.suppressSubgrids)
+                {
+                    ListTemp.Clear();
+                    foreach (var checkObj in list)
+                    {
+                        if (obj == checkObj || ListChecked.Contains(checkObj)) continue;
+                        var checkGrid = checkObj as MyCubeGrid;
+
+                        if (checkGrid != null && objGrid.IsInSameLogicalGroupAs(checkGrid))
+                        {
+                            ListTemp.Add(checkGrid);
+                            ListChecked.Add(checkGrid);
+                        }
+                    }
+
+                    if (ListTemp.Count > 0)
+                    {
+                        float largestSize = obj.PositionComp.LocalVolume.Radius;
+                        foreach (var temp in ListTemp)
+                        {
+                            if (temp.PositionComp.LocalVolume.Radius > largestSize)
+                            {
+                                largestSize = temp.PositionComp.LocalVolume.Radius;
+                                addEnt = temp;
+                            }
+                        }
+                    }
+                }
+
+                bool noPowerFound = true;
+                var gridIMy = addEnt as IMyCubeGrid;
+                var gridMy = addEnt as MyCubeGrid;
+                if (gridIMy.MarkedForClose || gridIMy.Closed) continue;
+                var powerDist = (MyResourceDistributorComponent)gridIMy.ResourceDistributor;
+                noPowerFound = powerDist.MaxAvailableResourceByType(GId, gridIMy) <= 0;
+                if (Settings.Instance.hideUnpowered && noPowerFound)
+                    continue;
+                var contact = new ContactInfo();
+
+                if (gridIMy.BigOwners != null && gridIMy.BigOwners.Count > 0)
+                {
+                    faction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(gridIMy.BigOwners[0]);
+                    if (faction != null)
+                    {
+                        factionTag = faction.Tag;
+                        var reputation = MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, faction.FactionId);
+                        if (playerFaction == faction)
+                            contact.friendly = true;
+                        else
+                        {
+                            contact.enemy = reputation < -500;
+                            contact.friendly = reputation > 500;
+                        }
+                    }
+                    else
+                    {
+                        factionTag = "NONE";
+                        contact.enemy = true;
+                    }
+                }                  
+
+                contact.entity = addEnt;
+                contact.noPower = noPowerFound;
+                contact.factionTag = factionTag;
+                contact.blockCount = gridMy.BlocksCount;
+                ListCleaned.Add(contact);
             }
 
             return ListCleaned;

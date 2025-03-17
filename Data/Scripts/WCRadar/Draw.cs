@@ -1,5 +1,4 @@
-﻿using Sandbox.ModAPI;
-using VRage.Game.Components;
+﻿using VRage.Game.Components;
 using VRageMath;
 using Sandbox.Game.Entities;
 using VRage.Game;
@@ -8,7 +7,7 @@ using System;
 using VRage.Game.Entity;
 using Draygo.API;
 using System.Text;
-using Sandbox.Game;
+using Sandbox.ModAPI;
 
 namespace WCRadar
 {
@@ -58,6 +57,7 @@ namespace WCRadar
                         bool drawSymbol = i == 1 ? s.enableSymbolsObs : s.enableSymbolsThreat;
                         bool drawLine = i == 1 ? s.enableLinesObs : s.enableLinesThreat;
                         bool showFaction = i == 1 ? false : s.showFactionThreat;
+                        bool showCollisionWarning = i == 1 ? s.enableCollisionWarning : false;
 
                         //Iterate contacts
                         foreach (var contact in checkList)
@@ -176,6 +176,13 @@ namespace WCRadar
 
                             if (drawLine)
                                 DrawLine(position, line, drawColor);
+
+                            if (showCollisionWarning && (voxel != null || grid != null) && controlledGrid.LinearVelocity.LengthSquared() > 10) //TODO take a look at dampening these messages or intermittently flash them?
+                            {
+                                var shipDirRay = new RayD(controlledGrid.PositionComp.WorldAABB.Center, Vector3D.Normalize(controlledGrid.LinearVelocity));
+                                if (shipDirRay.Intersects(contact.entity.PositionComp.WorldAABB) <= controlledGrid.LinearVelocity.Length() * 30 || contact.entity.PositionComp.WorldAABB.Contains(controlledGrid.PositionComp.WorldAABB) != ContainmentType.Disjoint)
+                                    MyAPIGateway.Utilities.ShowNotification("!! Collision Warning !!", 14, "Red");
+                            }
                         }
                     }
                     #endregion

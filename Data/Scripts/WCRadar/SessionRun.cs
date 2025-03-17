@@ -98,7 +98,7 @@ namespace WCRadar
                             DrawMissile();
                         if (threatListCleaned.Count > 0 || (obsListCleaned.Count > 0 && s.enableObstructions))
                         {
-                            if (MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Control))
+                            if (s.cycleExpandedView || MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Control))
                                 ExpandedDraw();
                             else
                                 ProcessDraws();

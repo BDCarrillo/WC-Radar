@@ -150,6 +150,8 @@ namespace WCRadar
         public bool showThreatVectors { get; set; } = false;
         [ProtoMember(45)]
         public bool disableConformal { get; set; } = false;
+        [ProtoMember(46)]
+        public bool cycleExpandedView { get; set; } = false;
     }
     [ProtoContract]
     public class ServerSettings
@@ -305,7 +307,7 @@ namespace WCRadar
         HudAPIv2.MenuItem LineEnableThreat, SymbolEnableThreat, LabelEnableThreat, ObstructionEnable, AsteroidEnable, CollisionEnable, MissileEnable, SuppressSubgrid, ShowFactionThreat, HideName;
         HudAPIv2.MenuItem LineEnableObs, SymbolEnableObs, LabelEnableObs, HideUnpowered, Reset, ServerReset, Blank, ResetConfirm, DisableConformal;
         HudAPIv2.MenuItem LineEnableMissile, SymbolEnableMissile, OffscreenMissileEnable, OffscreenThreatEnable, OffscreenObstructionEnable, LabelUp, LabelDown;
-        HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum, RollupFac, ThreatVec;
+        HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum, RollupFac, ThreatVec, ExpandedCycle;
 
         HudAPIv2.MenuTextInput ObstructionRange, MissileText, OffscreenLength, OffscreenWidth, HideLabelThreshold, RWRTime, RollupMax;
         HudAPIv2.MenuColorPickerInput EnemyColor, ObsColor, MissileColor, NeutralColor, FriendlyColor, RWRColor;
@@ -380,6 +382,7 @@ namespace WCRadar
                 LabelUp = new HudAPIv2.MenuItem("Increase text size", LabelSize, UpSizeLabel);
                 LabelDown = new HudAPIv2.MenuItem("Decrease text size", LabelSize, DownSizeLabel);
             DisableConformal = new HudAPIv2.MenuItem("Disable conformal box draws: " + Settings.Instance.disableConformal, SettingsMenu, ChangeConformal);
+            ExpandedCycle = new HudAPIv2.MenuItem("Detailed view always on: " + Settings.Instance.cycleExpandedView, SettingsMenu, ChangeExpanded);
             Blank = new HudAPIv2.MenuItem("- - - - - - - - - - -", SettingsMenu, null);
             ConfirmReset = new HudAPIv2.MenuSubCategory("Reset to defaults", SettingsMenu, "Confirm");
             Reset = new HudAPIv2.MenuItem("Reset defaults", ConfirmReset, ResetDefaults);
@@ -396,6 +399,11 @@ namespace WCRadar
             rollupText.Font = "monospace";
         }
 
+        private void ChangeExpanded()
+        {
+            Settings.Instance.cycleExpandedView = !Settings.Instance.cycleExpandedView;
+            DisableConformal.Text = "Detailed view always on: " + Settings.Instance.cycleExpandedView;
+        }
         private void ChangeConformal()
         {
             Settings.Instance.disableConformal = !Settings.Instance.disableConformal;
