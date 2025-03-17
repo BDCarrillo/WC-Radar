@@ -5,6 +5,7 @@ using CoreSystems.Api;
 using Draygo.API;
 using Digi.Example_NetworkProtobuf;
 using Sandbox.Game;
+using VRage.Game.Entity;
 
 namespace WCRadar
 {
@@ -93,7 +94,7 @@ namespace WCRadar
                     var seatTerm = Session?.Player?.Controller?.ControlledEntity as IMyTerminalBlock;                   
                     if (seatTerm != null && seatTerm.IsWorking)
                     {
-                        focusTarget = wcAPi.GetAiFocus(controlledGrid)?.GetTopMostParent();
+                        focusTarget = wcAPi.GetAiFocus((MyEntity)seatTerm.CubeGrid)?.GetTopMostParent();
 
                         if (projInbound.Item1 && (s.enableMissileLines || s.enableMissileSymbols || s.enableMissileWarning))
                             DrawMissile();
