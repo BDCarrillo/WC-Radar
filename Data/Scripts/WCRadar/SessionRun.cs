@@ -95,12 +95,14 @@ namespace WCRadar
                     if (seatTerm != null && seatTerm.IsWorking)
                     {
                         focusTarget = wcAPi.GetAiFocus((MyEntity)seatTerm.CubeGrid)?.GetTopMostParent();
-
+                        if (MyAPIGateway.Input.IsNewKeyPressed(VRage.Input.MyKeys.Control))
+                            controlWasPressed = !controlWasPressed;
+                        var ctrlPressed = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Control);
                         if (projInbound.Item1 && (s.enableMissileLines || s.enableMissileSymbols || s.enableMissileWarning))
                             DrawMissile();
                         if (threatListCleaned.Count > 0 || (obsListCleaned.Count > 0 && s.enableObstructions))
                         {
-                            if (s.cycleExpandedView || MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Control))
+                            if (s.cycleExpandedViewMode == 2 || s.cycleExpandedViewMode == 0 && ctrlPressed || s.cycleExpandedViewMode == 1 && controlWasPressed)
                                 ExpandedDraw();
                             else
                                 ProcessDraws();

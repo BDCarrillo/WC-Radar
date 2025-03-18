@@ -60,6 +60,9 @@ namespace WCRadar
         internal List<double> sortList = new List<double>();
         internal Dictionary<double, ContactInfo> sortDict = new Dictionary<double, ContactInfo>();
         internal List<string> sortFakeEnum = new List<string>() { "Closest First", "Furthest First", "Closest then ID", "Furthest then ID" };
+        internal List<string> expandedFakeEnum = new List<string>() { "hold CTRL", "cycle with CTRL", "always on" };
+        internal bool controlWasPressed;
+
         internal Vector3D[] corners = new Vector3D[8];
         internal MyEntity focusTarget = null;
 

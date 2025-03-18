@@ -152,9 +152,11 @@ namespace WCRadar
         [ProtoMember(45)]
         public bool disableConformal { get; set; } = false;
         [ProtoMember(46)]
-        public bool cycleExpandedView { get; set; } = false;
+        public bool cycleExpandedView { get; set; } = false; //Deprecated
         [ProtoMember(47)]
         public Color focusColor { get; set; } = Color.MediumVioletRed;
+        [ProtoMember(48)]
+        public int cycleExpandedViewMode { get; set; } = 0;
     }
     [ProtoContract]
     public class ServerSettings
@@ -387,7 +389,7 @@ namespace WCRadar
                 LabelUp = new HudAPIv2.MenuItem("Increase text size", LabelSize, UpSizeLabel);
                 LabelDown = new HudAPIv2.MenuItem("Decrease text size", LabelSize, DownSizeLabel);
             DisableConformal = new HudAPIv2.MenuItem("Disable conformal box draws: " + Settings.Instance.disableConformal, SettingsMenu, ChangeConformal);
-            ExpandedCycle = new HudAPIv2.MenuItem("Detailed view always on: " + Settings.Instance.cycleExpandedView, SettingsMenu, ChangeExpanded);
+            ExpandedCycle = new HudAPIv2.MenuItem("Detailed view: " + expandedFakeEnum[Settings.Instance.cycleExpandedViewMode], SettingsMenu, ChangeExpanded);
             Blank = new HudAPIv2.MenuItem("- - - - - - - - - - -", SettingsMenu, null);
             ConfirmReset = new HudAPIv2.MenuSubCategory("Reset to defaults", SettingsMenu, "Confirm");
             Reset = new HudAPIv2.MenuItem("Reset defaults", ConfirmReset, ResetDefaults);
@@ -406,8 +408,10 @@ namespace WCRadar
 
         private void ChangeExpanded()
         {
-            Settings.Instance.cycleExpandedView = !Settings.Instance.cycleExpandedView;
-            DisableConformal.Text = "Detailed view always on: " + Settings.Instance.cycleExpandedView;
+            Settings.Instance.cycleExpandedViewMode++;
+            if (Settings.Instance.cycleExpandedViewMode > 2)
+                Settings.Instance.cycleExpandedViewMode = 0;
+            ExpandedCycle.Text = "Detailed view: " + expandedFakeEnum[Settings.Instance.cycleExpandedViewMode];
         }
         private void ChangeConformal()
         {

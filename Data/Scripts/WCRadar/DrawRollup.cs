@@ -57,7 +57,7 @@ namespace WCRadar
                 {
                     var targ = sortDict[sortList[i]];
                     var targGrid = targ.entity as MyCubeGrid;
-                    var focus = focusTarget == targGrid;
+                    var focus = focusTarget == targ.entity;
                     var name = targ.entity.EntityId.ToString().Substring(0, 4);
                     if (updateText)
                     {

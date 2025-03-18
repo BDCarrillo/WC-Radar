@@ -75,7 +75,7 @@ namespace WCRadar
                             var rwr = rwrDict.ContainsKey(contact.entity);
                             var parent = contact.entity.GetTopMostParent();
                             var parentGrid = parent as MyCubeGrid;
-                            var focusSymbol = i == 2 ? parentGrid == focusTarget : false;
+                            var focusSymbol = i == 2 ? parent == focusTarget : false;
 
                             var screenCoords = Vector3D.Transform(position, viewProjectionMat);
                             var offscreen = screenCoords.X > 1 || screenCoords.X < -1 || screenCoords.Y > 1 || screenCoords.Y < -1 || screenCoords.Z > 1;
