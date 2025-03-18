@@ -33,40 +33,36 @@ namespace WCRadar
                     var Up = MyAPIGateway.Session.Camera.WorldMatrix.Up;
                     var rollupList = new MyConcurrentList<expandedMark>();
                     var buffer = 0.035;
-                    var ctrOffset = 0.25;
                    
                     #region Threats
                     foreach (var targ in threatListCleaned)
                     {
                         try
-                        {
+                        {                            
                             if (targ.entity.MarkedForClose || targ.entity.Closed) continue;
                             var parent = targ.entity.GetTopMostParent();
                             var focus = focusTarget == parent;
                             var position = parent.PositionComp.WorldAABB.Center;
                             var screenCoords = Vector3D.Transform(position, viewProjectionMat);
                             var offscreen = screenCoords.X > 1 || screenCoords.X < -1 || screenCoords.Y > 1 || screenCoords.Y < -1 || screenCoords.Z > 1;
-                            var ctrscreen = screenCoords.X < ctrOffset && screenCoords.X > -ctrOffset && screenCoords.Y < ctrOffset && screenCoords.Y > -ctrOffset;
-                            var topRightScreen = new Vector3D(screenCoords.X + symbolWidth * 0.5, screenCoords.Y + symbolWidth, screenCoords.Z);
                             if (s.enableThreatOffScreen && offscreen)
                                 DrawScreenEdge(screenCoords, targ.enemy ? s.enemyColor.ToVector4() : s.neutralColor.ToVector4());
                             if (s.enableLinesThreat)
                                 DrawLine(position, line, targ.enemy ? s.enemyColor.ToVector4() : s.neutralColor.ToVector4());
 
 
-                            if (ctrscreen)
+                            if (s.expandedBox.Contains(new Vector2D(screenCoords.X, screenCoords.Y)) == ContainmentType.Contains)
                             {
-                                var labelString = (targ.factionTag.Length > 0? targ.factionTag + " - " : "") + parent.DisplayName + (targ.noPower ? " - No Pwr" : "");
-                                var textTopLeft = new Vector2D(topRightScreen.X + 0.05, topRightScreen.Y + 1.05);
+                                var topRightScreen = new Vector3D(screenCoords.X + symbolWidth * 0.5, screenCoords.Y + symbolWidth, screenCoords.Z);
                                 var temp = new expandedMark()
                                 {
                                     topRight = new Vector2D(topRightScreen.X, topRightScreen.Y),
                                     screenCoordsZ = screenCoords.Z,
                                     worldCtr = position,
                                     color = focus ? s.focusColor : targ.enemy ? s.enemyColor : s.neutralColor,
-                                    label = labelString,
+                                    label = (targ.factionTag.Length > 0 ? targ.factionTag + " - " : "") + parent.DisplayName + (targ.noPower ? " - No Pwr" : ""),
                                     screenCoordsCtr = new Vector2D(screenCoords.X, screenCoords.Y),
-                                    textTopLeft = textTopLeft
+                                    textTopLeft = new Vector2D(topRightScreen.X + 0.05, topRightScreen.Y + 1.05)
                                 };
                                 rollupList.Add(temp);
                             }
@@ -98,10 +94,10 @@ namespace WCRadar
                     }
                     if (drawList.Count > 0)
                     {
-                        var currentY = ctrOffset + 1;
+                        var currentY = s.expandedBox.Max.Y + 1;
                         foreach (var mark in drawList)
                         {
-                            mark.textTopLeft.X = ctrOffset + 0.02;
+                            mark.textTopLeft.X = s.expandedBox.Max.X + 0.02;
                             mark.textTopLeft.Y = currentY;
                             currentY -= buffer;
                             DrawExpanded(mark, worldProjectionMat, playerPos);
@@ -109,16 +105,10 @@ namespace WCRadar
                     }
                     //Draw highlight frame
                     var sizeMult = 0.75f;
-                    var topRightDraw = new Vector2D(ctrOffset, ctrOffset);
-                    var topLeftDraw = new Vector2D(-ctrOffset, ctrOffset);
-                    var botRightDraw = new Vector2D(ctrOffset, -ctrOffset);
-                    var botLeftDraw = new Vector2D(-ctrOffset, -ctrOffset);
-                    var color = s.enemyColor;
-                    var topLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, topLeftDraw, color, Width: symbolWidth * sizeMult, Height: symbolHeight * sizeMult, TimeToLive: 2, Rotation: 0, HideHud: true, Shadowing: true);
-                    var topRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, topRightDraw, color, Width: symbolWidth * sizeMult, Height: symbolHeight * sizeMult, TimeToLive: 2, Rotation: 1.5708f, HideHud: true, Shadowing: true);
-                    var botRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, botRightDraw, color, Width: symbolWidth * sizeMult, Height: symbolHeight * sizeMult, TimeToLive: 2, Rotation: 3.14159f, HideHud: true, Shadowing: true);
-                    var botLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, botLeftDraw, color, Width: symbolWidth * sizeMult, Height: symbolHeight * sizeMult, TimeToLive: 2, Rotation: -1.5708f, HideHud: true, Shadowing: true);
-                    
+                    var topRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, s.expandedBox.Max, s.enemyColor, null, 2, 1, symbolWidth * sizeMult, symbolHeight * sizeMult, 1.5708f, true, true);
+                    var topLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, new Vector2D(s.expandedBox.Min.X, s.expandedBox.Max.Y), s.enemyColor, null, 2, 1, symbolWidth * sizeMult, symbolHeight * sizeMult, 0, true, true);
+                    var botRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, new Vector2D(s.expandedBox.Max.X, s.expandedBox.Min.Y), s.enemyColor, null, 2, 1, symbolWidth * sizeMult, symbolHeight * sizeMult, 3.14159f, true, true);
+                    var botLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, s.expandedBox.Min, s.enemyColor, null, 2, 1, symbolWidth * sizeMult, symbolHeight * sizeMult, -1.5708f, true, true);                    
                 }
             }
             catch (Exception e)

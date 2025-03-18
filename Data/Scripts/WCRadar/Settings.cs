@@ -59,6 +59,7 @@ namespace WCRadar
             rollupShowFac = true,
             showThreatVectors = false,
             focusColor = Color.MediumVioletRed,
+            expandedBox = new BoundingBox2D(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25))
         };
 
         [ProtoMember(1)]
@@ -157,6 +158,8 @@ namespace WCRadar
         public Color focusColor { get; set; } = Color.MediumVioletRed;
         [ProtoMember(48)]
         public int cycleExpandedViewMode { get; set; } = 0;
+        [ProtoMember(49)]
+        public BoundingBox2D expandedBox { get; set; } = new BoundingBox2D(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25));
     }
     [ProtoContract]
     public class ServerSettings
@@ -292,6 +295,7 @@ namespace WCRadar
                 if (settings.rwrDisplayTimeTicks == 0) settings.rwrDisplayTimeTicks = Settings.Default.rwrDisplayTimeTicks;
                 if (settings.rwrColor.PackedValue == 0) settings.rwrColor = Settings.Default.rwrColor;
                 if (settings.focusColor.PackedValue == 0) settings.focusColor = Settings.Default.focusColor;
+                if (settings.expandedBox.Width == 0) settings.expandedBox = new BoundingBox2D(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25));
 
                 if (client)
                 {
@@ -309,12 +313,12 @@ namespace WCRadar
         }
 
         HudAPIv2.MenuRootCategory SettingsMenu;
-        HudAPIv2.MenuSubCategory ThreatMenu, ObstructionMenu, MissileMenu, OffscreenMenu, ConfirmReset, ResetServerConfirm, RWR, Rollup, SummaryListPos, LabelSize;
+        HudAPIv2.MenuSubCategory ThreatMenu, ObstructionMenu, MissileMenu, OffscreenMenu, ConfirmReset, ResetServerConfirm, RWR, Rollup, SummaryListPos, LabelSize, DetailFrame, DetailOptions;
         HudAPIv2.MenuItem LineEnableThreat, SymbolEnableThreat, LabelEnableThreat, ObstructionEnable, AsteroidEnable, CollisionEnable, MissileEnable, SuppressSubgrid, ShowFactionThreat, HideName;
         HudAPIv2.MenuItem LineEnableObs, SymbolEnableObs, LabelEnableObs, HideUnpowered, Reset, ServerReset, Blank, ResetConfirm, DisableConformal;
         HudAPIv2.MenuItem LineEnableMissile, SymbolEnableMissile, OffscreenMissileEnable, OffscreenThreatEnable, OffscreenObstructionEnable, LabelUp, LabelDown;
         HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum, RollupFac, ThreatVec, ExpandedCycle;
-
+        HudAPIv2.MenuItem FrameLeft, FrameRight, FrameUp, FrameDown, FrameScaleUp, FrameScaleDown, FrameReset;
         HudAPIv2.MenuTextInput ObstructionRange, MissileText, OffscreenLength, OffscreenWidth, HideLabelThreshold, RWRTime, RollupMax;
         HudAPIv2.MenuColorPickerInput EnemyColor, ObsColor, MissileColor, NeutralColor, FriendlyColor, RWRColor, FocusColor;
         
@@ -331,7 +335,6 @@ namespace WCRadar
                 FocusColor = new HudAPIv2.MenuColorPickerInput("Set focus color >>", ThreatMenu, Settings.Instance.focusColor, "Select color", ChangeFocusColor);
                 SpeedSetting = new HudAPIv2.MenuItem("Velocity shown as: " + (Settings.Instance.speedRel ? "Relative" : "Absolute"), ThreatMenu, ChangeSpeedType);
                 ThreatVec = new HudAPIv2.MenuItem("Show direction vectors on threats: " + Settings.Instance.showThreatVectors, ThreatMenu, ShowVecOnThreat);
-
 
             ObstructionMenu = new HudAPIv2.MenuSubCategory("Obstruction Display Options >>", SettingsMenu, "Obstruction Options");
                 LineEnableObs = new HudAPIv2.MenuItem("Show lines: " + Settings.Instance.enableLinesObs, ObstructionMenu, ShowLinesObs);
@@ -377,6 +380,17 @@ namespace WCRadar
                 HideEmpty = new HudAPIv2.MenuItem("Hide if no targets: " + Settings.Instance.rollupHideEmpty, Rollup, HideRollup, true);
                 SortClosest = new HudAPIv2.MenuItem("Sort by: " + sortFakeEnum[Settings.Instance.rollupSort], Rollup, RollupSort, true);
 
+            DetailOptions = new HudAPIv2.MenuSubCategory("Detailed View Options >>", SettingsMenu, "Detailed view options");
+                ExpandedCycle = new HudAPIv2.MenuItem("Detailed view: " + expandedFakeEnum[Settings.Instance.cycleExpandedViewMode], DetailOptions, ChangeExpanded);
+                DetailFrame = new HudAPIv2.MenuSubCategory("Change detailed view frame >>", DetailOptions, "Change detailed view frame");
+                    FrameUp = new HudAPIv2.MenuItem("Move frame up", DetailFrame, FrameUpChange);
+                    FrameDown = new HudAPIv2.MenuItem("Move frame down", DetailFrame, FrameDownChange);
+                    FrameLeft = new HudAPIv2.MenuItem("Move frame left", DetailFrame, FrameLeftChange);
+                    FrameRight = new HudAPIv2.MenuItem("Move frame right", DetailFrame, FrameRightChange);
+                    FrameScaleUp = new HudAPIv2.MenuItem("Enlarge frame", DetailFrame, FrameScaleUpChange);
+                    FrameScaleDown = new HudAPIv2.MenuItem("Shrink frame", DetailFrame, FrameScaleDownChange);
+                    Blank = new HudAPIv2.MenuItem("- - - - - - - - - - -", DetailFrame, null);
+                    FrameReset = new HudAPIv2.MenuItem("Reset Size/Position", DetailFrame, FrameResetChange);
 
             Blank = new HudAPIv2.MenuItem("- - - - - - - - - - -", SettingsMenu, null);
             HideName = new HudAPIv2.MenuItem("Hide grid name: " + Settings.Instance.hideName, SettingsMenu, HideGridName);
@@ -389,7 +403,8 @@ namespace WCRadar
                 LabelUp = new HudAPIv2.MenuItem("Increase text size", LabelSize, UpSizeLabel);
                 LabelDown = new HudAPIv2.MenuItem("Decrease text size", LabelSize, DownSizeLabel);
             DisableConformal = new HudAPIv2.MenuItem("Disable conformal box draws: " + Settings.Instance.disableConformal, SettingsMenu, ChangeConformal);
-            ExpandedCycle = new HudAPIv2.MenuItem("Detailed view: " + expandedFakeEnum[Settings.Instance.cycleExpandedViewMode], SettingsMenu, ChangeExpanded);
+
+
             Blank = new HudAPIv2.MenuItem("- - - - - - - - - - -", SettingsMenu, null);
             ConfirmReset = new HudAPIv2.MenuSubCategory("Reset to defaults", SettingsMenu, "Confirm");
             Reset = new HudAPIv2.MenuItem("Reset defaults", ConfirmReset, ResetDefaults);
@@ -404,6 +419,47 @@ namespace WCRadar
             rollupText.Scale = Settings.Instance.rollupTextSize;
             rollupText.Visible = false;
             rollupText.Font = "monospace";
+        }
+
+        private void FrameUpChange()
+        {
+            var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
+            var offset = new Vector2D(0, 0.005 * mult);
+            Settings.Instance.expandedBox = new BoundingBox2D(Settings.Instance.expandedBox.Min + offset, Settings.Instance.expandedBox.Max + offset);
+        }
+        private void FrameDownChange()
+        {
+            var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
+            var offset = new Vector2D(0, -0.005 * mult);
+            Settings.Instance.expandedBox = new BoundingBox2D(Settings.Instance.expandedBox.Min + offset, Settings.Instance.expandedBox.Max + offset);
+        }
+        private void FrameLeftChange()
+        {
+            var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
+            var offset = new Vector2D(-0.005 * mult, 0);
+            Settings.Instance.expandedBox = new BoundingBox2D(Settings.Instance.expandedBox.Min + offset, Settings.Instance.expandedBox.Max + offset);
+        }
+        private void FrameRightChange()
+        {
+            var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
+            var offset = new Vector2D(0.005 * mult, 0);
+            Settings.Instance.expandedBox = new BoundingBox2D(Settings.Instance.expandedBox.Min + offset, Settings.Instance.expandedBox.Max + offset);
+        }
+        private void FrameScaleUpChange()
+        {
+            var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
+            var offset = new Vector2D(0.005 * mult, 0.005 * mult);
+            Settings.Instance.expandedBox = new BoundingBox2D(Settings.Instance.expandedBox.Min - offset, Settings.Instance.expandedBox.Max + offset);
+        }
+        private void FrameScaleDownChange()
+        {
+            var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
+            var offset = new Vector2D(0.005 * mult, 0.005 * mult);
+            Settings.Instance.expandedBox = new BoundingBox2D(Settings.Instance.expandedBox.Min + offset, Settings.Instance.expandedBox.Max - offset);
+        }
+        private void FrameResetChange()
+        {
+            Settings.Instance.expandedBox = new BoundingBox2D(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25));
         }
 
         private void ChangeExpanded()
