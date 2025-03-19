@@ -11,6 +11,34 @@ using VRageMath;
 namespace WCRadar
 {
     [ProtoContract]
+    public class BB2D
+    {
+        [ProtoMember(1)]
+        internal Vector2D Min { get; set; }
+        [ProtoMember(2)]
+        internal Vector2D Max { get; set; }
+
+        internal BB2D New(Vector2D min, Vector2D max)
+        {
+            return new BB2D() { Min = min, Max = max };
+        }
+
+        internal void Update(Vector2D offsetMin, Vector2D offsetMax)
+        {
+            Min += offsetMin;
+            Max += offsetMax;
+        }
+        internal bool Contains (double x, double y)
+        {
+            if (!(Min.X > x) && !(x > Max.X) && !(Min.Y > y) && !(y > Max.Y))
+            {
+                return true;
+            }
+            return false;
+        }
+    }
+
+    [ProtoContract]
     public class Settings
     {
         public static Settings Instance;
@@ -59,7 +87,7 @@ namespace WCRadar
             rollupShowFac = true,
             showThreatVectors = false,
             focusColor = Color.MediumVioletRed,
-            expandedBox = new BoundingBox2D(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25))
+            expandedBox = new BB2D().New(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25))
         };
 
         [ProtoMember(1)]
@@ -159,7 +187,7 @@ namespace WCRadar
         [ProtoMember(48)]
         public int cycleExpandedViewMode { get; set; } = 0;
         [ProtoMember(49)]
-        public BoundingBox2D expandedBox { get; set; } = new BoundingBox2D(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25));
+        public BB2D expandedBox { get; set; } = new BB2D().New(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25));
     }
     [ProtoContract]
     public class ServerSettings
@@ -295,7 +323,7 @@ namespace WCRadar
                 if (settings.rwrDisplayTimeTicks == 0) settings.rwrDisplayTimeTicks = Settings.Default.rwrDisplayTimeTicks;
                 if (settings.rwrColor.PackedValue == 0) settings.rwrColor = Settings.Default.rwrColor;
                 if (settings.focusColor.PackedValue == 0) settings.focusColor = Settings.Default.focusColor;
-                if (settings.expandedBox.Width == 0) settings.expandedBox = new BoundingBox2D(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25));
+                if (settings.expandedBox.Min == Vector2D.Zero && settings.expandedBox.Max == Vector2D.Zero) settings.expandedBox = new BB2D().New(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25));
 
                 if (client)
                 {
@@ -425,41 +453,41 @@ namespace WCRadar
         {
             var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
             var offset = new Vector2D(0, 0.005 * mult);
-            Settings.Instance.expandedBox = new BoundingBox2D(Settings.Instance.expandedBox.Min + offset, Settings.Instance.expandedBox.Max + offset);
+            Settings.Instance.expandedBox.Update(offset, offset);
         }
         private void FrameDownChange()
         {
             var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
             var offset = new Vector2D(0, -0.005 * mult);
-            Settings.Instance.expandedBox = new BoundingBox2D(Settings.Instance.expandedBox.Min + offset, Settings.Instance.expandedBox.Max + offset);
+            Settings.Instance.expandedBox.Update(offset, offset);
         }
         private void FrameLeftChange()
         {
             var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
             var offset = new Vector2D(-0.005 * mult, 0);
-            Settings.Instance.expandedBox = new BoundingBox2D(Settings.Instance.expandedBox.Min + offset, Settings.Instance.expandedBox.Max + offset);
+            Settings.Instance.expandedBox.Update(offset, offset);
         }
         private void FrameRightChange()
         {
             var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
             var offset = new Vector2D(0.005 * mult, 0);
-            Settings.Instance.expandedBox = new BoundingBox2D(Settings.Instance.expandedBox.Min + offset, Settings.Instance.expandedBox.Max + offset);
+            Settings.Instance.expandedBox.Update(offset, offset);
         }
         private void FrameScaleUpChange()
         {
             var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
             var offset = new Vector2D(0.005 * mult, 0.005 * mult);
-            Settings.Instance.expandedBox = new BoundingBox2D(Settings.Instance.expandedBox.Min - offset, Settings.Instance.expandedBox.Max + offset);
+            Settings.Instance.expandedBox.Update(-offset, offset);
         }
         private void FrameScaleDownChange()
         {
             var mult = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Shift) ? 10 : 1;
             var offset = new Vector2D(0.005 * mult, 0.005 * mult);
-            Settings.Instance.expandedBox = new BoundingBox2D(Settings.Instance.expandedBox.Min + offset, Settings.Instance.expandedBox.Max - offset);
+            Settings.Instance.expandedBox.Update(offset, -offset);
         }
         private void FrameResetChange()
         {
-            Settings.Instance.expandedBox = new BoundingBox2D(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25));
+            Settings.Instance.expandedBox = new BB2D().New(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25));
         }
 
         private void ChangeExpanded()

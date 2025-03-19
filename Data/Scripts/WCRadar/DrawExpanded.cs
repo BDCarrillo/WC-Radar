@@ -51,7 +51,7 @@ namespace WCRadar
                                 DrawLine(position, line, targ.enemy ? s.enemyColor.ToVector4() : s.neutralColor.ToVector4());
 
 
-                            if (s.expandedBox.Contains(new Vector2D(screenCoords.X, screenCoords.Y)) == ContainmentType.Contains)
+                            if (s.expandedBox.Contains(screenCoords.X, screenCoords.Y))
                             {
                                 var topRightScreen = new Vector3D(screenCoords.X + symbolWidth * 0.5, screenCoords.Y + symbolWidth, screenCoords.Z);
                                 var temp = new expandedMark()
