@@ -26,6 +26,7 @@ namespace WCRadar
         internal int tick;
         public static bool serverEnforcement = false;
         public static bool serverRWREnforcement = false;
+        public static bool serverSuppressMissiles = false;
 
         internal bool serverSuppress = false;
         internal bool serverSuppressRWR = false;
@@ -54,7 +55,6 @@ namespace WCRadar
         internal float symbolHeight = 0f;//Leave this as zero, monitor aspect ratio is figured in later
         internal float aspectRatio = 0f;//Leave this as zero, monitor aspect ratio is figured in later
         internal float symbolWidth = 0.03f;
-        internal bool expandedDrawActive;
         internal ICollection<long> Players = new List<long>();
         internal HudAPIv2.HUDMessage rollupText = null;
         internal List<double> sortList = new List<double>();
@@ -73,14 +73,14 @@ namespace WCRadar
             if (client)
             {
                 corners = null;
-                rwrDict.Clear();
-                threatList.Clear();
-                threatListEnt.Clear();
-                obsList.Clear();
-                threatListCleaned.Clear();
-                obsListCleaned.Clear();
-                threatListEnt.Clear();
-                projPosList.Clear();
+                rwrDict?.Clear();
+                threatList?.Clear();
+                threatListEnt?.Clear();
+                obsList?.Clear();
+                threatListCleaned?.Clear();
+                obsListCleaned?.Clear();
+                threatListEnt?.Clear();
+                projPosList?.Clear();
                 controlledGrid = null;
                 trackedBlock = null;
                 trackedRWRBlock = null;

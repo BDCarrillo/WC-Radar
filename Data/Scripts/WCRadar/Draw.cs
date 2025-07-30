@@ -4,7 +4,6 @@ using Sandbox.Game.Entities;
 using VRage.Game;
 using VRage.Utils;
 using System;
-using VRage.Game.Entity;
 using Draygo.API;
 using System.Text;
 using Sandbox.ModAPI;
@@ -30,14 +29,8 @@ namespace WCRadar
                         controlledGrid = null;
                         return;
                     }
-                    /*
-                    var playerPos = controlledGrid.PositionComp.WorldAABB.Center;
-                    var Up = Session.Camera.WorldMatrix.Up;
-                    */
                     var lineScale = (float)(0.1 * Math.Tan(Session.Camera.FovWithZoom * 0.5));
                     var fovScale = Session.Camera.FieldOfViewAngle / 70;
-
-
 
                     #region Combined
                     for (var i = 1; i < 3; i++)
@@ -45,11 +38,11 @@ namespace WCRadar
                         var checkList = i == 1 ? obsListCleaned : threatListCleaned;
                         bool earlyExit = false;
                         //Early exit if neither obstructions or asteroids are enabled
-                        if(i == 1 && !(s.enableObstructions || s.enableAsteroids || s.enableLinesObs || s.enableLabelsObs || s.enableSymbolsObs))
+                        if (i == 1 && !(s.enableObstructions || s.enableAsteroids || s.enableLinesObs || s.enableLabelsObs || s.enableSymbolsObs))
                             earlyExit = true;
-                        if(i == 2 && !(s.enableLinesThreat || s.enableLabelsThreat || s.enableSymbolsThreat))
+                        if (i == 2 && !(s.enableLinesThreat || s.enableLabelsThreat || s.enableSymbolsThreat))
                             earlyExit = true;
-                        if (earlyExit) 
+                        if (earlyExit)
                             continue;
                         //Contextual vars depending on which list is being looked at
                         bool drawOffScreen = i == 1 ? s.enableObstructionOffScreen : s.enableThreatOffScreen;
@@ -62,7 +55,7 @@ namespace WCRadar
                         //Iterate contacts
                         foreach (var contact in checkList)
                         {
-                            if (contact.entity.MarkedForClose || contact.entity.Closed || contact.blockCount < s.hideLabelBlockThreshold || contact.noPower && s.hideUnpowered) 
+                            if (contact.entity.MarkedForClose || contact.entity.Closed || contact.blockCount < s.hideLabelBlockThreshold || contact.noPower && s.hideUnpowered)
                                 continue;
                             var position = contact.entity.PositionComp.WorldAABB.Center;
                             var objSize = contact.entity.PositionComp.LocalVolume.Radius;
@@ -78,15 +71,15 @@ namespace WCRadar
                             var focusSymbol = i == 2 ? parent == focusTarget : false;
 
                             var screenCoords = Vector3D.Transform(position, viewProjectionMat);
-                            var offscreen = screenCoords.X > 1 || screenCoords.X < -1 || screenCoords.Y > 1 || screenCoords.Y < -1 || screenCoords.Z > 1;
                             var rgbColor = i == 1 ? contact.friendly ? s.friendlyColor : s.obsColor : rwr ? s.rwrColor : focusSymbol ? s.focusColor : contact.enemy ? s.enemyColor : s.neutralColor;
-                            var drawColor = rgbColor.ToVector4();            
+                            var drawColor = rgbColor.ToVector4();
 
-                            if (offscreen && drawOffScreen) 
-                                DrawScreenEdge(screenCoords, drawColor);
-
-                            if (offscreen) 
+                            if (screenCoords.X > 1 || screenCoords.X < -1 || screenCoords.Y > 1 || screenCoords.Y < -1 || screenCoords.Z > 1)//Offscreen
+                            {
+                                if(drawOffScreen) 
+                                    DrawScreenEdge(screenCoords, drawColor);
                                 continue;
+                            }
                             
                             //Basic corner
                             var topRightScreen = Vector3D.Transform(position + camMat.Up * objSize + camMat.Right * objSize, viewProjectionMat);
@@ -247,7 +240,6 @@ namespace WCRadar
                     screenEdgeX = (float)(screenCoords.X / screenCoords.Y);
                 }
             }
-            //var screenEdge
             var rotation = (float)Math.Atan2(screenEdgeX, screenEdgeY);
             var symbolObj = new HudAPIv2.BillBoardHUDMessage(line, new Vector2D(screenEdgeX, screenEdgeY), color, Width: Settings.Instance.OffScreenIndicatorThick, Height: Settings.Instance.OffScreenIndicatorLen, TimeToLive: 2, Rotation: rotation);
         }

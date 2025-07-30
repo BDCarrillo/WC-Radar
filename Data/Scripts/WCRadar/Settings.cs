@@ -11,34 +11,6 @@ using VRageMath;
 namespace WCRadar
 {
     [ProtoContract]
-    public class BB2D
-    {
-        [ProtoMember(1)]
-        internal Vector2D Min { get; set; }
-        [ProtoMember(2)]
-        internal Vector2D Max { get; set; }
-
-        internal BB2D New(Vector2D min, Vector2D max)
-        {
-            return new BB2D() { Min = min, Max = max };
-        }
-
-        internal void Update(Vector2D offsetMin, Vector2D offsetMax)
-        {
-            Min += offsetMin;
-            Max += offsetMax;
-        }
-        internal bool Contains (double x, double y)
-        {
-            if (!(Min.X > x) && !(x > Max.X) && !(Min.Y > y) && !(y > Max.Y))
-            {
-                return true;
-            }
-            return false;
-        }
-    }
-
-    [ProtoContract]
     public class Settings
     {
         public static Settings Instance;
@@ -197,11 +169,14 @@ namespace WCRadar
         {
             blockSubtypeList = null,
             rwrSubtypeList = null,
+            prohibitMissileLocations = false,
         };
         [ProtoMember(1)]
         public List<string> blockSubtypeList { get; set; }
         [ProtoMember(2)]
         public List<string> rwrSubtypeList { get; set; }
+        [ProtoMember(3)]
+        public bool prohibitMissileLocations { get; set; }
     }
     public partial class Session
     {
@@ -314,36 +289,29 @@ namespace WCRadar
         public void Save(Settings settings)
         {
             var Filename = "Config.cfg";
-            try
-            {
-                if (settings.neutralColor.PackedValue == 0) settings.neutralColor = Color.LightGray;
-                if (settings.friendlyColor.PackedValue == 0) settings.friendlyColor = Color.Green;
-                if (settings.OffScreenIndicatorLen == 0 || settings.OffScreenIndicatorLen == 0.05f) settings.OffScreenIndicatorLen = 0.15f;
-                if (settings.OffScreenIndicatorThick == 0 || settings.OffScreenIndicatorThick == 0.0003f) settings.OffScreenIndicatorThick = 0.01f;
-                if (settings.rwrDisplayTimeTicks == 0) settings.rwrDisplayTimeTicks = Settings.Default.rwrDisplayTimeTicks;
-                if (settings.rwrColor.PackedValue == 0) settings.rwrColor = Settings.Default.rwrColor;
-                if (settings.focusColor.PackedValue == 0) settings.focusColor = Settings.Default.focusColor;
-                if (settings.expandedBox.Min == Vector2D.Zero && settings.expandedBox.Max == Vector2D.Zero) settings.expandedBox = new BB2D().New(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25));
+            if (settings.neutralColor.PackedValue == 0) settings.neutralColor = Color.LightGray;
+            if (settings.friendlyColor.PackedValue == 0) settings.friendlyColor = Color.Green;
+            if (settings.OffScreenIndicatorLen == 0 || settings.OffScreenIndicatorLen == 0.05f) settings.OffScreenIndicatorLen = 0.15f;
+            if (settings.OffScreenIndicatorThick == 0 || settings.OffScreenIndicatorThick == 0.0003f) settings.OffScreenIndicatorThick = 0.01f;
+            if (settings.rwrDisplayTimeTicks == 0) settings.rwrDisplayTimeTicks = Settings.Default.rwrDisplayTimeTicks;
+            if (settings.rwrColor.PackedValue == 0) settings.rwrColor = Settings.Default.rwrColor;
+            if (settings.focusColor.PackedValue == 0) settings.focusColor = Settings.Default.focusColor;
+            if (settings.expandedBox.Min == Vector2D.Zero && settings.expandedBox.Max == Vector2D.Zero) settings.expandedBox = new BB2D().New(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25));
 
-                if (client)
-                {
-                    TextWriter writer;
-                    writer = MyAPIGateway.Utilities.WriteFileInLocalStorage(Filename, typeof(Settings));
-                    writer.Write(MyAPIGateway.Utilities.SerializeToXML(settings));
-                    writer.Close();
-                }
-                Settings.Instance = settings;
-            }
-            catch (Exception e)
+            if (client)
             {
-                MyAPIGateway.Utilities.ShowMessage("WC Radar","Error with cfg file");
+                TextWriter writer;
+                writer = MyAPIGateway.Utilities.WriteFileInLocalStorage(Filename, typeof(Settings));
+                writer.Write(MyAPIGateway.Utilities.SerializeToXML(settings));
+                writer.Close();
             }
+            Settings.Instance = settings;
         }
 
         HudAPIv2.MenuRootCategory SettingsMenu;
         HudAPIv2.MenuSubCategory ThreatMenu, ObstructionMenu, MissileMenu, OffscreenMenu, ConfirmReset, ResetServerConfirm, RWR, Rollup, SummaryListPos, LabelSize, DetailFrame, DetailOptions;
         HudAPIv2.MenuItem LineEnableThreat, SymbolEnableThreat, LabelEnableThreat, ObstructionEnable, AsteroidEnable, CollisionEnable, MissileEnable, SuppressSubgrid, ShowFactionThreat, HideName;
-        HudAPIv2.MenuItem LineEnableObs, SymbolEnableObs, LabelEnableObs, HideUnpowered, Reset, ServerReset, Blank, ResetConfirm, DisableConformal;
+        HudAPIv2.MenuItem LineEnableObs, SymbolEnableObs, LabelEnableObs, HideUnpowered, Reset, ServerReset, Blank, DisableConformal;
         HudAPIv2.MenuItem LineEnableMissile, SymbolEnableMissile, OffscreenMissileEnable, OffscreenThreatEnable, OffscreenObstructionEnable, LabelUp, LabelDown;
         HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum, RollupFac, ThreatVec, ExpandedCycle;
         HudAPIv2.MenuItem FrameLeft, FrameRight, FrameUp, FrameDown, FrameScaleUp, FrameScaleDown, FrameReset;

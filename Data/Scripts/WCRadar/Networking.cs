@@ -198,47 +198,37 @@ namespace Digi.Example_NetworkProtobuf
                 Session.registeredController = false;
                 try
                 {
-                    bool display = false;
-                    bool server = false;
                     if (!Session.localCfg && cSettings != null)
                     {
                         Settings.Instance = cSettings;
                         MyLog.Default.WriteLineAndConsole($"WC Radar: Received server display defaults");
-                        display = true;                       
                     }
-                    if (sSettings != null && sSettings.blockSubtypeList != null && sSettings.blockSubtypeList.Count != 0)
+                    if (sSettings != null)
                     {
-                        ServerSettings.Instance = sSettings;
-                        Session.serverEnforcement = true;
-                        MyLog.Default.WriteLineAndConsole($"WC Radar: Received server settings");
-                        server = true;
+                        if (sSettings.blockSubtypeList != null && sSettings.blockSubtypeList.Count != 0)
+                        {
+                            ServerSettings.Instance = sSettings;
+                            Session.serverEnforcement = true;
+                            MyLog.Default.WriteLineAndConsole($"WC Radar: Received server settings");
+                        }
+                        if (sSettings.rwrSubtypeList != null && sSettings.rwrSubtypeList.Count != 0)
+                        {
+                            ServerSettings.Instance = sSettings;
+                            Session.serverRWREnforcement = true;
+                            MyLog.Default.WriteLineAndConsole($"WC Radar: Received server RWR settings");
+                        }
+                        if (sSettings.prohibitMissileLocations)
+                            Session.serverSuppressMissiles = true;
+
                     }
-                    if (sSettings != null && sSettings.rwrSubtypeList != null && sSettings.rwrSubtypeList.Count != 0)
-                    {
-                        ServerSettings.Instance = sSettings;
-                        Session.serverRWREnforcement = true;
-                        MyLog.Default.WriteLineAndConsole($"WC Radar: Received server RWR settings");
-                        server = true;
-                    }
-                    /*
-                    string message = "WC Radar: ";
-                    if (display)
-                        message += "Received server default config.";
-                    if (server)
-                        message += "Received server block list.";
-                    if(server || display)MyAPIGateway.Utilities.ShowNotification(message);
-                    */
                 }
                 catch (Exception e)
                 {
-                    MyLog.Default.WriteLineAndConsole($"WC Radar: Failed to process packet");
+                    MyLog.Default.WriteLineAndConsole($"WC Radar: Failed to process packet\n" + e);
                 }
             }
-            else//Client requested settings (I think?)
-            {
+            else
                 MyLog.Default.WriteLineAndConsole($"WC Radar: Client requested settings");
-            }
-
             return false; // relay packet to other clients (only works if server receives it)
         }
     }
