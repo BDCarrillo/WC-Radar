@@ -138,7 +138,7 @@ namespace WCRadar
                             {
                                 var distance = Vector3D.Distance(position, controlledGrid.PositionComp.WorldAABB.Center);
                                 var info = new StringBuilder($"<color={rgbColor.R}, {rgbColor.G}, {rgbColor.B}>");
-                                if (showFaction) info.AppendLine($"  {contact.factionTag}");
+                                if (showFaction && contact.factionTag.Length > 0) info.AppendLine($"  {contact.factionTag}");
                                 if (!Settings.Instance.hideName && parent.DisplayName != null) info.AppendLine($"  {parent.DisplayName}");
                                 if (contact.noPower) info.AppendLine($"  No Pwr");
                                 info.AppendLine($"  {(distance > 1000 ? (distance / 1000).ToString("0.0") + " km" : (int)distance + " m")}");

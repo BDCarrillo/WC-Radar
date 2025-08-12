@@ -234,6 +234,10 @@ namespace WCRadar
                     }
                     else
                         contactChar.enemy = true;
+
+                    if (!isThreat && contactChar.enemy)
+                        continue;
+
                     contactChar.entity = obj;
                     contactChar.blockCount = int.MaxValue;
                     ListCleaned.Add(contactChar);
