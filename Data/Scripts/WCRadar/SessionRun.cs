@@ -67,28 +67,33 @@ namespace WCRadar
                     }
 
                 }
-                if (!hide && MyAPIGateway.Session.Config.HudState != 0 && hudAPI.Heartbeat)
+                var s = Settings.Instance;
+                if (hudAPI.Heartbeat)
                 {
-                    var s = Settings.Instance;
-                    var seatTerm = Session?.Player?.Controller?.ControlledEntity as IMyTerminalBlock;                   
-                    if (seatTerm != null && seatTerm.IsWorking)
+                    if (!hide && (MyAPIGateway.Session.Config.HudState != 0 || s.alwaysShow))
                     {
-                        focusTarget = wcAPi.GetAiFocus((MyEntity)seatTerm.CubeGrid)?.GetTopMostParent();
-                        if (MyAPIGateway.Input.IsNewKeyPressed(VRage.Input.MyKeys.Control))
-                            controlWasPressed = !controlWasPressed;
-                        var ctrlPressed = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Control);
-                        if (!serverSuppressMissiles && projInbound.Item1 && (s.enableMissileLines || s.enableMissileSymbols || s.enableMissileWarning))
-                            DrawMissile();
-                        if (threatListCleaned.Count > 0 || (obsListCleaned.Count > 0 && s.enableObstructions))
+                        var seatTerm = Session?.Player?.Controller?.ControlledEntity as IMyTerminalBlock;
+                        if (seatTerm != null && seatTerm.IsWorking)
                         {
-                            if (s.cycleExpandedViewMode == 2 || s.cycleExpandedViewMode == 0 && ctrlPressed || s.cycleExpandedViewMode == 1 && controlWasPressed)
-                                ExpandedDraw();
-                            else
-                                ProcessDraws();
-                        }
+                            focusTarget = wcAPi.GetAiFocus((MyEntity)seatTerm.CubeGrid)?.GetTopMostParent();
+                            if (MyAPIGateway.Input.IsNewKeyPressed(VRage.Input.MyKeys.Control))
+                                controlWasPressed = !controlWasPressed;
+                            var ctrlPressed = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Control);
+                            if (!serverSuppressMissiles && projInbound.Item1 && (s.enableMissileLines || s.enableMissileSymbols || s.enableMissileWarning))
+                                DrawMissile();
+                            if (threatListCleaned.Count > 0 || (obsListCleaned.Count > 0 && s.enableObstructions))
+                            {
+                                if (s.cycleExpandedViewMode == 2 || s.cycleExpandedViewMode == 0 && ctrlPressed || s.cycleExpandedViewMode == 1 && controlWasPressed)
+                                    ExpandedDraw();
+                                else
+                                    ProcessDraws();
+                            }
 
-                        if (s.showRollup && rollupText != null)
-                            RollupData();
+                            if (s.showRollup && rollupText != null)
+                                RollupData();
+                        }
+                        else if (s.showRollup && rollupText.Visible)
+                            rollupText.Visible = false;
                     }
                     else if (s.showRollup && rollupText.Visible)
                         rollupText.Visible = false;

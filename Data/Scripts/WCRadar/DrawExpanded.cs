@@ -105,10 +105,10 @@ namespace WCRadar
                     }
                     //Draw highlight frame
                     var sizeMult = 0.75f;
-                    var topRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, s.expandedBox.Max, s.enemyColor, null, 2, 1, symbolWidth * sizeMult, symbolHeight * sizeMult, 1.5708f, true, true);
-                    var topLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, new Vector2D(s.expandedBox.Min.X, s.expandedBox.Max.Y), s.enemyColor, null, 2, 1, symbolWidth * sizeMult, symbolHeight * sizeMult, 0, true, true);
-                    var botRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, new Vector2D(s.expandedBox.Max.X, s.expandedBox.Min.Y), s.enemyColor, null, 2, 1, symbolWidth * sizeMult, symbolHeight * sizeMult, 3.14159f, true, true);
-                    var botLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, s.expandedBox.Min, s.enemyColor, null, 2, 1, symbolWidth * sizeMult, symbolHeight * sizeMult, -1.5708f, true, true);                    
+                    var topRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, s.expandedBox.Max, s.enemyColor, null, 2, 1, symbolWidth * sizeMult, symbolHeight * sizeMult, 1.5708f, false, true);
+                    var topLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, new Vector2D(s.expandedBox.Min.X, s.expandedBox.Max.Y), s.enemyColor, null, 2, 1, symbolWidth * sizeMult, symbolHeight * sizeMult, 0, false, true);
+                    var botRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, new Vector2D(s.expandedBox.Max.X, s.expandedBox.Min.Y), s.enemyColor, null, 2, 1, symbolWidth * sizeMult, symbolHeight * sizeMult, 3.14159f, false, true);
+                    var botLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, s.expandedBox.Min, s.enemyColor, null, 2, 1, symbolWidth * sizeMult, symbolHeight * sizeMult, -1.5708f, false, true);                    
                 }
             }
             catch (Exception e)
@@ -143,16 +143,16 @@ namespace WCRadar
             info.Append($" - {(distance > 1000 ? (distance / 1000).ToString("0.0") + " km" : (int)distance + " m")}");
             var textLocation = mark.textTopLeft;
             textLocation.Y -= 0.985;
-            var label = new HudAPIv2.HUDMessage(info, textLocation, null, 2, 1, true, true);
+            var label = new HudAPIv2.HUDMessage(info, textLocation, null, 2, 1, false, true);
             label.Visible = true;
 
             //Mini frame draw
-            var ctrSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, mark.screenCoordsCtr, mark.color, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: 0, HideHud: true, Shadowing: true);
+            var ctrSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, mark.screenCoordsCtr, mark.color, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: 0, HideHud: false, Shadowing: true);
 
             if (mark.color == Settings.Instance.focusColor)
             {
                 var angle = (tick % 100) * .015708f;
-                var focusSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, mark.screenCoordsCtr, mark.color, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: angle, HideHud: true, Shadowing: true);
+                var focusSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, mark.screenCoordsCtr, mark.color, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: angle, HideHud: false, Shadowing: true);
             }
         }
     }

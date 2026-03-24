@@ -20,7 +20,7 @@ namespace WCRadar
                     var message = new StringBuilder();
                     message.Append("<color=255,0,0>");
                     message.Append(projInbound.Item2 + " " + s.missileWarningText);
-                    var warning = new HudAPIv2.HUDMessage(message, new Vector2D(-0.11, -0.5), null, 2, Settings.Instance.labelTextSize * 1.25f, true, true, Color.Black);
+                    var warning = new HudAPIv2.HUDMessage(message, new Vector2D(-0.11, -0.5), null, 2, Settings.Instance.labelTextSize * 1.25f, false, true, Color.Black);
                     warning.Visible = true;
                 }
 
@@ -40,7 +40,7 @@ namespace WCRadar
                             float distAdjFactor = screenCoords.Z < 0.99995f ? 1 : (float)(-14000f * screenCoords.Z + 14000.3); //wtf
                             float distAdjSymWidth = symbolWidth * distAdjFactor;
                             float distAdjSymHeight = distAdjSymWidth * aspectRatio;
-                            var symbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, symbolPosition, Settings.Instance.missileColor, Width: distAdjSymWidth, Height: distAdjSymHeight, TimeToLive: 2, Rotation: 0.785398f, HideHud: true, Shadowing: true);
+                            var symbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, symbolPosition, Settings.Instance.missileColor, Width: distAdjSymWidth, Height: distAdjSymHeight, TimeToLive: 2, Rotation: 0.785398f, Shadowing: true, HideHud: false);
                         }
                         if (s.enableMissileOffScreen && offscreen)
                             DrawScreenEdge(screenCoords, s.missileColor);

@@ -59,7 +59,8 @@ namespace WCRadar
             rollupShowFac = true,
             showThreatVectors = false,
             focusColor = Color.MediumVioletRed,
-            expandedBox = new BB2D().New(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25))
+            expandedBox = new BB2D().New(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25)),
+            alwaysShow = false,
         };
 
         [ProtoMember(1)]
@@ -160,6 +161,8 @@ namespace WCRadar
         public int cycleExpandedViewMode { get; set; } = 0;
         [ProtoMember(49)]
         public BB2D expandedBox { get; set; } = new BB2D().New(new Vector2D(-0.25, -0.25), new Vector2D(0.25, 0.25));
+        [ProtoMember(50)]
+        public bool alwaysShow { get; set; } = false;
     }
     [ProtoContract]
     public class ServerSettings
@@ -314,7 +317,7 @@ namespace WCRadar
         HudAPIv2.MenuItem LineEnableObs, SymbolEnableObs, LabelEnableObs, HideUnpowered, Reset, ServerReset, Blank, DisableConformal;
         HudAPIv2.MenuItem LineEnableMissile, SymbolEnableMissile, OffscreenMissileEnable, OffscreenThreatEnable, OffscreenObstructionEnable, LabelUp, LabelDown;
         HudAPIv2.MenuItem RWREnable, SpeedSetting, MoveLeft, MoveRight, MoveUp, MoveDown, SizeUp, SizeDown, HideEmpty, SortClosest, RollupShow, ShowNum, RollupFac, ThreatVec, ExpandedCycle;
-        HudAPIv2.MenuItem FrameLeft, FrameRight, FrameUp, FrameDown, FrameScaleUp, FrameScaleDown, FrameReset;
+        HudAPIv2.MenuItem FrameLeft, FrameRight, FrameUp, FrameDown, FrameScaleUp, FrameScaleDown, FrameReset, AlwaysShow;
         HudAPIv2.MenuTextInput ObstructionRange, MissileText, OffscreenLength, OffscreenWidth, HideLabelThreshold, RWRTime, RollupMax;
         HudAPIv2.MenuColorPickerInput EnemyColor, ObsColor, MissileColor, NeutralColor, FriendlyColor, RWRColor, FocusColor;
         
@@ -389,6 +392,7 @@ namespace WCRadar
                     FrameReset = new HudAPIv2.MenuItem("Reset Size/Position", DetailFrame, FrameResetChange);
 
             Blank = new HudAPIv2.MenuItem("- - - - - - - - - - -", SettingsMenu, null);
+            AlwaysShow = new HudAPIv2.MenuItem("Always show on hud: " + Settings.Instance.alwaysShow, SettingsMenu, AlwaysShowCycle);
             HideName = new HudAPIv2.MenuItem("Hide grid name: " + Settings.Instance.hideName, SettingsMenu, HideGridName);
             HideUnpowered = new HudAPIv2.MenuItem("Hide unpowered grids: " + Settings.Instance.hideUnpowered, SettingsMenu, HideUnpoweredGrids);
             SuppressSubgrid = new HudAPIv2.MenuItem("Hide subgrids: " + Settings.Instance.suppressSubgrids, SettingsMenu, SuppressSubgrids);
@@ -409,7 +413,7 @@ namespace WCRadar
             ServerReset = new HudAPIv2.MenuItem("Reset to server default (if any)", ResetServerConfirm, ResetServerDefaults);
 
             //Init rollup text box
-            rollupText = new HudAPIv2.HUDMessage(new System.Text.StringBuilder(), new Vector2D(0, 0), Shadowing: true, ShadowColor: Color.Black);
+            rollupText = new HudAPIv2.HUDMessage(new System.Text.StringBuilder(), new Vector2D(0, 0), Shadowing: true, ShadowColor: Color.Black, HideHud: false);
             rollupText.InitialColor = Color.White;
             rollupText.Origin = Settings.Instance.rollupPos;
             rollupText.Scale = Settings.Instance.rollupTextSize;
@@ -699,6 +703,11 @@ namespace WCRadar
         {
             Settings.Instance.hideName = !Settings.Instance.hideName;
             HideName.Text = "Hide grid name: " + Settings.Instance.hideName;
+        }
+        private void AlwaysShowCycle()
+        {
+            Settings.Instance.alwaysShow = !Settings.Instance.alwaysShow;
+            AlwaysShow.Text = "Always show on hud: " + Settings.Instance.alwaysShow;
         }
 
         private void ShowSymbolsThreat()

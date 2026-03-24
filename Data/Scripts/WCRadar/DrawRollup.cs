@@ -86,7 +86,7 @@ namespace WCRadar
                             continue;
 
                         var topRightScreen = Vector3D.Transform(position + camMat.Up * targSize + camMat.Right * targSize, viewProjectionMat);
-                        var label = new HudAPIv2.HUDMessage(new StringBuilder($"<color={color2.R}, {color2.G}, {color2.B}>" + name), new Vector2D(ctr.X, ctr.Y), null, 2, s.rollupTextSize, true, true);
+                        var label = new HudAPIv2.HUDMessage(new StringBuilder($"<color={color2.R}, {color2.G}, {color2.B}>" + name), new Vector2D(ctr.X, ctr.Y), null, 2, s.rollupTextSize, false, true);
                         label.Font = "monospace";
                         var offset = label.GetTextLength();
                         var offsetX = topRightScreen.X - ctr.X;

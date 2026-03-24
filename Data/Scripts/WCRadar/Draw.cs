@@ -149,7 +149,7 @@ namespace WCRadar
                                     else
                                         info.AppendLine($"  {(int)parentGrid.LinearVelocity.Length()} m/s");
                                 }
-                                var label = new HudAPIv2.HUDMessage(info, topRightText, null, 2, Settings.Instance.labelTextSize, true, true);
+                                var label = new HudAPIv2.HUDMessage(info, topRightText, null, 2, Settings.Instance.labelTextSize, false, true);
                                 label.Visible = true;
                             }
 
@@ -157,19 +157,19 @@ namespace WCRadar
                             {
                                 if (minimalSymbol)
                                 {
-                                    var ctrSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, new Vector2D(screenCoords.X, screenCoords.Y), drawColor, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: 0, HideHud: true, Shadowing: true);
+                                    var ctrSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, new Vector2D(screenCoords.X, screenCoords.Y), drawColor, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: 0, HideHud: false, Shadowing: true);
                                 }
                                 else
                                 {
-                                    var topLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, topLeftDraw, drawColor, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 0, HideHud: true, Shadowing: true);
-                                    var topRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, topRightDraw, drawColor, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 1.5708f, HideHud: true, Shadowing: true);
-                                    var botRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, botRightDraw, drawColor, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 3.14159f, HideHud: true, Shadowing: true);
-                                    var botLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, botLeftDraw, drawColor, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: -1.5708f, HideHud: true, Shadowing: true);
+                                    var topLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, topLeftDraw, drawColor, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 0, HideHud: false, Shadowing: true);
+                                    var topRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, topRightDraw, drawColor, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 1.5708f, HideHud: false, Shadowing: true);
+                                    var botRightSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, botRightDraw, drawColor, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: 3.14159f, HideHud: false, Shadowing: true);
+                                    var botLeftSymbolObj = new HudAPIv2.BillBoardHUDMessage(frameCorner, botLeftDraw, drawColor, Width: symbolWidth * 0.5f, Height: symbolHeight * 0.5f, TimeToLive: 2, Rotation: -1.5708f, HideHud: false, Shadowing: true);
                                 }
                                 if (focusSymbol)
                                 {
                                     var angle = (tick % 100) * .015708f;
-                                    var focusSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, new Vector2D(screenCoords.X, screenCoords.Y), drawColor, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: angle, HideHud: true, Shadowing: true);
+                                    var focusSymbolObj = new HudAPIv2.BillBoardHUDMessage(missileOutline, new Vector2D(screenCoords.X, screenCoords.Y), drawColor, Width: symbolWidth, Height: symbolHeight, TimeToLive: 2, Rotation: angle, HideHud: false, Shadowing: true);
                                 }
                             }
 
@@ -241,7 +241,7 @@ namespace WCRadar
                 }
             }
             var rotation = (float)Math.Atan2(screenEdgeX, screenEdgeY);
-            var symbolObj = new HudAPIv2.BillBoardHUDMessage(line, new Vector2D(screenEdgeX, screenEdgeY), color, Width: Settings.Instance.OffScreenIndicatorThick, Height: Settings.Instance.OffScreenIndicatorLen, TimeToLive: 2, Rotation: rotation);
+            var symbolObj = new HudAPIv2.BillBoardHUDMessage(line, new Vector2D(screenEdgeX, screenEdgeY), color, Width: Settings.Instance.OffScreenIndicatorThick, Height: Settings.Instance.OffScreenIndicatorLen, TimeToLive: 2, Rotation: rotation, HideHud: false);
         }
     }
 }
