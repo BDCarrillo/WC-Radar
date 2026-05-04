@@ -61,12 +61,12 @@ namespace WCRadar
                     
                     if (serverEnforcement)
                     {
-                        if (trackedBlock != null && (!trackedBlock.IsWorking || !controlledGrid.IsPowered))
+                        if (trackedBlock != null && (!trackedBlock.IsWorking || !controlledGrid.IsPowerSwitchOn))
                         {
                             trackedBlock = null;
                             serverSuppress = true;
                         }
-                        if (trackedBlock == null && tick % 300 == 0 && controlledGrid.IsPowered)
+                        if (trackedBlock == null && tick % 300 == 0 && controlledGrid.IsPowerSwitchOn)
                         {
                             serverSuppress = true;
                             foreach (MyCubeBlock block in controlledGrid.GetFatBlocks())
@@ -84,12 +84,12 @@ namespace WCRadar
                     }
                     if (serverRWREnforcement)
                     {
-                        if (trackedRWRBlock != null && (!trackedRWRBlock.IsWorking || !controlledGrid.IsPowered))
+                        if (trackedRWRBlock != null && (!trackedRWRBlock.IsWorking || !controlledGrid.IsPowerSwitchOn))
                         {
                             trackedRWRBlock = null;
                             serverSuppressRWR = true;
                         }
-                        if (trackedRWRBlock == null && tick % 300 == 0 && controlledGrid.IsPowered)
+                        if (trackedRWRBlock == null && tick % 300 == 0 && controlledGrid.IsPowerSwitchOn)
                         {
                             serverSuppressRWR = true;
                             foreach (MyCubeBlock block in controlledGrid.GetFatBlocks())
