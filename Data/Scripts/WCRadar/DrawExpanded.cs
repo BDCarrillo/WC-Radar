@@ -7,6 +7,7 @@ using System;
 using Draygo.API;
 using System.Text;
 using VRage.Collections;
+using Sandbox.Game;
 
 namespace WCRadar
 {
@@ -60,7 +61,7 @@ namespace WCRadar
                                     screenCoordsZ = screenCoords.Z,
                                     worldCtr = position,
                                     color = focus ? s.focusColor : targ.enemy ? s.enemyColor : s.neutralColor,
-                                    label = (targ.factionTag.Length > 0 ? targ.factionTag + " - " : "") + parent.DisplayName + (targ.noPower ? " - No Pwr" : ""),
+                                    label = (targ.factionTag.Length > 0 ? targ.factionTag + " - " : "") + parent.DisplayName.Truncate(21) + (targ.noPower ? " - No Pwr" : ""),
                                     screenCoordsCtr = new Vector2D(screenCoords.X, screenCoords.Y),
                                     textTopLeft = new Vector2D(topRightScreen.X + 0.05, topRightScreen.Y + 1.05)
                                 };

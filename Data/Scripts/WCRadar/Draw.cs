@@ -7,6 +7,7 @@ using System;
 using Draygo.API;
 using System.Text;
 using Sandbox.ModAPI;
+using Sandbox.Game;
 
 namespace WCRadar
 {
@@ -139,7 +140,7 @@ namespace WCRadar
                                 var distance = Vector3D.Distance(position, controlledGrid.PositionComp.WorldAABB.Center);
                                 var info = new StringBuilder($"<color={rgbColor.R}, {rgbColor.G}, {rgbColor.B}>");
                                 if (showFaction && contact.factionTag.Length > 0) info.AppendLine($"  {contact.factionTag}");
-                                if (!Settings.Instance.hideName && parent.DisplayName != null) info.AppendLine($"  {parent.DisplayName}");
+                                if (!Settings.Instance.hideName && parent.DisplayName != null) info.AppendLine($"  {parent.DisplayName.Truncate(21)}");
                                 if (contact.noPower) info.AppendLine($"  No Pwr");
                                 info.AppendLine($"  {(distance > 1000 ? (distance / 1000).ToString("0.0") + " km" : (int)distance + " m")}");
                                 if (parentGrid != null)

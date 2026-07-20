@@ -3,6 +3,7 @@ using System.Text;
 using Sandbox.Game.Entities;
 using System.Collections.Generic;
 using Draygo.API;
+using Sandbox.Game;
 
 namespace WCRadar
 {
@@ -69,7 +70,7 @@ namespace WCRadar
                         else
                             speedStr = $"{(int)targGrid.LinearVelocity.Length()} m/s";
                         var color = focus ? s.focusColor : rwrDict.ContainsKey(targ.entity) ? s.rwrColor : targ.enemy ? s.enemyColor : s.neutralColor;
-                        info.AppendLine($"<color={color.R}, {color.G}, {color.B}> {(s.rollupShowNum ? name + " - " : "")}{(s.rollupShowFac && targ.factionTag != "" ? targ.factionTag + " - " : "")}{targGrid.DisplayName} - {distStr} - {speedStr}{(targ.noPower ? " - NO PWR" : "")}");
+                        info.AppendLine($"<color={color.R}, {color.G}, {color.B}> {(s.rollupShowNum ? name + " - " : "")}{(s.rollupShowFac && targ.factionTag != "" ? targ.factionTag + " - " : "")}{targGrid.DisplayName.Truncate(21)} - {distStr} - {speedStr}{(targ.noPower ? " - NO PWR" : "")}");
                     }
 
                     //Draw the corresponding number
