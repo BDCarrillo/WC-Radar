@@ -1,4 +1,6 @@
-﻿using Sandbox.ModAPI;
+﻿using Sandbox.Definitions;
+using Sandbox.ModAPI;
+using VRage.Game;
 using VRage.Game.Components;
 using VRageMath;
 using Sandbox.Game.Entities;
@@ -220,22 +222,9 @@ namespace WCRadar
                     var character = obj as IMyCharacter;
                     if (character == null) continue;
                     var contactChar = new ContactInfo();
-                    contactFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(character.ControllerInfo.ControllingIdentityId);
-                    if (contactFaction != null)
-                    {
-                        var reputation = playerFaction == null ?
-                            MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, contactFaction.FactionId) :
-                            MyAPIGateway.Session.Factions.GetReputationBetweenFactions(playerFaction.FactionId, contactFaction.FactionId); 
-                        if (playerFaction == contactFaction)
-                            contactChar.friendly = true;
-                        else
-                        {
-                            contactChar.enemy = reputation < -500;
-                            contactChar.friendly = reputation > 500;
-                        }
-                    }
-                    else
-                        contactChar.enemy = true;
+                    var characterOwner = character.ControllerInfo.ControllingIdentityId;
+                    contactFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(characterOwner);
+                    SetRelation(contactChar, playerID, playerFaction, characterOwner, contactFaction);
 
                     if (!isThreat && contactChar.enemy)
                         continue;
@@ -290,26 +279,10 @@ namespace WCRadar
 
                 if (gridIMy.BigOwners != null && gridIMy.BigOwners.Count > 0)
                 {
-                    contactFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(gridIMy.BigOwners[0]);
-                    if (contactFaction != null)
-                    {
-                        factionTag = contactFaction.Tag;
-                        var reputation = playerFaction == null ?
-                            MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, contactFaction.FactionId) :
-                            MyAPIGateway.Session.Factions.GetReputationBetweenFactions(playerFaction.FactionId, contactFaction.FactionId);
-                        if (playerFaction == contactFaction)
-                            contact.friendly = true;
-                        else
-                        {
-                            contact.enemy = reputation < -500;
-                            contact.friendly = reputation > 500;
-                        }
-                    }
-                    else
-                    {
-                        factionTag = "NONE";
-                        contact.enemy = true;
-                    }
+                    var gridOwner = gridIMy.BigOwners[0];
+                    contactFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(gridOwner);
+                    factionTag = contactFaction != null ? contactFaction.Tag : "NONE";
+                    SetRelation(contact, playerID, playerFaction, gridOwner, contactFaction);
                 }                  
 
                 contact.entity = addEnt;
@@ -320,6 +293,69 @@ namespace WCRadar
             }
 
             return ListCleaned;
+        }
+
+        /// <summary>
+        /// Marks a contact friendly or enemy the way SE itself judges two players for turrets, ownership and its own
+        /// HUD (MyIDModule.GetRelationPlayerPlayer), which WeaponCore uses as well, so the radar shows what the guns
+        /// will do:
+        /// - the same player, or the same faction: friendly;
+        /// - neither in a faction: enemy;
+        /// - one of them in no faction: that player's own reputation with the other's faction;
+        /// - one of them in an NPC faction: the other player's own reputation with that NPC faction;
+        /// - two player factions: the reputation between the two factions.
+        /// SE reads a player's own reputation for an NPC faction, not the faction pair: NPC factions whose definition
+        /// pins players' reputation (StaticReputation) can hold a player at Neutral while the pair is still at war.
+        /// On a client, another player's own reputation is only known where the server has sent it; SE's HUD on that
+        /// client reads the same value.
+        /// </summary>
+        private static void SetRelation(ContactInfo contact, long playerId, IMyFaction playerFaction, long ownerId, IMyFaction ownerFaction)
+        {
+            contact.enemy = false;
+            contact.friendly = false;
+
+            if (ownerId == playerId || (playerFaction != null && playerFaction == ownerFaction))
+            {
+                contact.friendly = true;
+                return;
+            }
+            if (playerFaction == null && ownerFaction == null)
+            {
+                contact.enemy = true;
+                return;
+            }
+
+            var factions = MyAPIGateway.Session.Factions;
+            int reputation;
+            if (ownerFaction == null)
+                reputation = factions.GetReputationBetweenPlayerAndFaction(ownerId, playerFaction.FactionId);
+            else if (playerFaction == null)
+                reputation = factions.GetReputationBetweenPlayerAndFaction(playerId, ownerFaction.FactionId);
+            else
+            {
+                var playerFactionIsNpc = IsNpcFaction(playerFaction);
+                var ownerFactionIsNpc = IsNpcFaction(ownerFaction);
+                if (ownerFactionIsNpc && !playerFactionIsNpc)
+                    reputation = factions.GetReputationBetweenPlayerAndFaction(playerId, ownerFaction.FactionId);
+                else if (playerFactionIsNpc && !ownerFactionIsNpc)
+                    reputation = factions.GetReputationBetweenPlayerAndFaction(ownerId, playerFaction.FactionId);
+                else
+                    reputation = factions.GetReputationBetweenFactions(playerFaction.FactionId, ownerFaction.FactionId);
+            }
+
+            // SE's default economy: below -500 is Enemies, 500 and above is Friends.
+            contact.enemy = reputation < -500;
+            contact.friendly = reputation >= 500;
+        }
+
+        /// <summary>
+        /// SE's MyFactionCollection.IsNpcFaction(tag), which the mod API doesn't expose: a faction with a definition,
+        /// or of a type other than None or PlayerMade.
+        /// </summary>
+        private static bool IsNpcFaction(IMyFaction faction)
+        {
+            if (MyDefinitionManager.Static.TryGetFactionDefinition(faction.Tag) != null) return true;
+            return faction.FactionType != MyFactionTypes.None && faction.FactionType != MyFactionTypes.PlayerMade;
         }
     }
 }
