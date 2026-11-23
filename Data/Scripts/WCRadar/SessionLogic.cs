@@ -184,7 +184,6 @@ namespace WCRadar
             ICollection<MyEntity> ListChecked = new List<MyEntity>();
             ICollection<MyEntity> ListTemp = new List<MyEntity>();
             var playerID = MyAPIGateway.Session.Player.IdentityId;
-            var playerFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(playerID);
 
             foreach (var obj in list)
             {
@@ -220,22 +219,7 @@ namespace WCRadar
                     var character = obj as IMyCharacter;
                     if (character == null) continue;
                     var contactChar = new ContactInfo();
-                    contactFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(character.ControllerInfo.ControllingIdentityId);
-                    if (contactFaction != null)
-                    {
-                        var reputation = playerFaction == null ?
-                            MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, contactFaction.FactionId) :
-                            MyAPIGateway.Session.Factions.GetReputationBetweenFactions(playerFaction.FactionId, contactFaction.FactionId); 
-                        if (playerFaction == contactFaction)
-                            contactChar.friendly = true;
-                        else
-                        {
-                            contactChar.enemy = reputation < -500;
-                            contactChar.friendly = reputation > 500;
-                        }
-                    }
-                    else
-                        contactChar.enemy = true;
+                    SetRelation(contactChar, playerID, character.ControllerInfo.ControllingIdentityId);
 
                     if (!isThreat && contactChar.enemy)
                         continue;
@@ -290,26 +274,10 @@ namespace WCRadar
 
                 if (gridIMy.BigOwners != null && gridIMy.BigOwners.Count > 0)
                 {
-                    contactFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(gridIMy.BigOwners[0]);
-                    if (contactFaction != null)
-                    {
-                        factionTag = contactFaction.Tag;
-                        var reputation = playerFaction == null ?
-                            MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, contactFaction.FactionId) :
-                            MyAPIGateway.Session.Factions.GetReputationBetweenFactions(playerFaction.FactionId, contactFaction.FactionId);
-                        if (playerFaction == contactFaction)
-                            contact.friendly = true;
-                        else
-                        {
-                            contact.enemy = reputation < -500;
-                            contact.friendly = reputation > 500;
-                        }
-                    }
-                    else
-                    {
-                        factionTag = "NONE";
-                        contact.enemy = true;
-                    }
+                    var gridOwner = gridIMy.BigOwners[0];
+                    contactFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(gridOwner);
+                    factionTag = contactFaction != null ? contactFaction.Tag : "NONE";
+                    SetRelation(contact, playerID, gridOwner);
                 }                  
 
                 contact.entity = addEnt;
@@ -320,6 +288,17 @@ namespace WCRadar
             }
 
             return ListCleaned;
+        }
+
+        /// <summary>
+        /// SE's own check, which turrets and WeaponCore use. A client only knows another player's own reputation if
+        /// the server sent it, so a factionless owner usually reads as SE's default (enemy), as on SE's HUD.
+        /// </summary>
+        private static void SetRelation(ContactInfo contact, long playerId, long ownerId)
+        {
+            var relation = MyIDModule.GetRelationPlayerPlayer(playerId, ownerId);
+            contact.friendly = relation == MyRelationsBetweenPlayers.Self || relation == MyRelationsBetweenPlayers.Allies;
+            contact.enemy = relation == MyRelationsBetweenPlayers.Enemies;
         }
     }
 }
