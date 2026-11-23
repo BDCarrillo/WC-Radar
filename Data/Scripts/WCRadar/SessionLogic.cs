@@ -212,7 +212,7 @@ namespace WCRadar
                         continue;
                     }
                 }
-                IMyFaction faction = null;
+                IMyFaction contactFaction = null;
                 var factionTag = "";
                 var objGrid = obj as MyCubeGrid;
                 if (objGrid == null)//Characters?
@@ -220,11 +220,13 @@ namespace WCRadar
                     var character = obj as IMyCharacter;
                     if (character == null) continue;
                     var contactChar = new ContactInfo();
-                    faction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(character.ControllerInfo.ControllingIdentityId);
-                    if (faction != null)
+                    contactFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(character.ControllerInfo.ControllingIdentityId);
+                    if (contactFaction != null)
                     {
-                        var reputation = MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, faction.FactionId);
-                        if (playerFaction == faction)
+                        var reputation = playerFaction == null ?
+                            MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, contactFaction.FactionId) :
+                            MyAPIGateway.Session.Factions.GetReputationBetweenFactions(playerFaction.FactionId, contactFaction.FactionId); 
+                        if (playerFaction == contactFaction)
                             contactChar.friendly = true;
                         else
                         {
@@ -288,12 +290,14 @@ namespace WCRadar
 
                 if (gridIMy.BigOwners != null && gridIMy.BigOwners.Count > 0)
                 {
-                    faction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(gridIMy.BigOwners[0]);
-                    if (faction != null)
+                    contactFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(gridIMy.BigOwners[0]);
+                    if (contactFaction != null)
                     {
-                        factionTag = faction.Tag;
-                        var reputation = MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, faction.FactionId);
-                        if (playerFaction == faction)
+                        factionTag = contactFaction.Tag;
+                        var reputation = playerFaction == null ?
+                            MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(playerID, contactFaction.FactionId) :
+                            MyAPIGateway.Session.Factions.GetReputationBetweenFactions(playerFaction.FactionId, contactFaction.FactionId);
+                        if (playerFaction == contactFaction)
                             contact.friendly = true;
                         else
                         {
