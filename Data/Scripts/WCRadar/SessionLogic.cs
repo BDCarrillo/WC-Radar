@@ -219,8 +219,9 @@ namespace WCRadar
                     var character = obj as IMyCharacter;
                     if (character == null) continue;
                     var contactChar = new ContactInfo();
-                    SetRelation(contactChar, playerID, character.ControllerInfo.ControllingIdentityId);
-
+                    var relation = MyIDModule.GetRelationPlayerPlayer(playerID, character.ControllerInfo.ControllingIdentityId);
+                    contactChar.friendly = relation == MyRelationsBetweenPlayers.Self || relation == MyRelationsBetweenPlayers.Allies;
+                    contactChar.enemy = relation == MyRelationsBetweenPlayers.Enemies;
                     if (!isThreat && contactChar.enemy)
                         continue;
 
@@ -277,7 +278,9 @@ namespace WCRadar
                     var gridOwner = gridIMy.BigOwners[0];
                     contactFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(gridOwner);
                     factionTag = contactFaction != null ? contactFaction.Tag : "NONE";
-                    SetRelation(contact, playerID, gridOwner);
+                    var relation = MyIDModule.GetRelationPlayerPlayer(playerID, gridOwner);
+                    contact.friendly = relation == MyRelationsBetweenPlayers.Self || relation == MyRelationsBetweenPlayers.Allies;
+                    contact.enemy = relation == MyRelationsBetweenPlayers.Enemies;
                 }                  
 
                 contact.entity = addEnt;
@@ -288,17 +291,6 @@ namespace WCRadar
             }
 
             return ListCleaned;
-        }
-
-        /// <summary>
-        /// SE's own check, which turrets and WeaponCore use. A client only knows another player's own reputation if
-        /// the server sent it, so a factionless owner usually reads as SE's default (enemy), as on SE's HUD.
-        /// </summary>
-        private static void SetRelation(ContactInfo contact, long playerId, long ownerId)
-        {
-            var relation = MyIDModule.GetRelationPlayerPlayer(playerId, ownerId);
-            contact.friendly = relation == MyRelationsBetweenPlayers.Self || relation == MyRelationsBetweenPlayers.Allies;
-            contact.enemy = relation == MyRelationsBetweenPlayers.Enemies;
         }
     }
 }
