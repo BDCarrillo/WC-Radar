@@ -296,18 +296,10 @@ namespace WCRadar
         }
 
         /// <summary>
-        /// Marks a contact friendly or enemy the way SE itself judges two players for turrets, ownership and its own
-        /// HUD (MyIDModule.GetRelationPlayerPlayer), which WeaponCore uses as well, so the radar shows what the guns
-        /// will do:
-        /// - the same player, or the same faction: friendly;
-        /// - neither in a faction: enemy;
-        /// - one of them in no faction: that player's own reputation with the other's faction;
-        /// - one of them in an NPC faction: the other player's own reputation with that NPC faction;
-        /// - two player factions: the reputation between the two factions.
-        /// SE reads a player's own reputation for an NPC faction, not the faction pair: NPC factions whose definition
-        /// pins players' reputation (StaticReputation) can hold a player at Neutral while the pair is still at war.
-        /// On a client, another player's own reputation is only known where the server has sent it; SE's HUD on that
-        /// client reads the same value.
+        /// Mirrors SE's MyIDModule.GetRelationPlayerPlayer, which turrets and WeaponCore use, so the radar shows what
+        /// the guns will do. Against an NPC faction SE reads the player's own reputation, not the faction pair,
+        /// because a faction with StaticReputation can hold a player at Neutral while the pair is at war. A client
+        /// only knows another player's own reputation if the server sent it, the same as SE's HUD on that client.
         /// </summary>
         private static void SetRelation(ContactInfo contact, long playerId, IMyFaction playerFaction, long ownerId, IMyFaction ownerFaction)
         {
@@ -343,15 +335,12 @@ namespace WCRadar
                     reputation = factions.GetReputationBetweenFactions(playerFaction.FactionId, ownerFaction.FactionId);
             }
 
-            // SE's default economy: below -500 is Enemies, 500 and above is Friends.
+            // SE's default economy thresholds.
             contact.enemy = reputation < -500;
             contact.friendly = reputation >= 500;
         }
 
-        /// <summary>
-        /// SE's MyFactionCollection.IsNpcFaction(tag), which the mod API doesn't expose: a faction with a definition,
-        /// or of a type other than None or PlayerMade.
-        /// </summary>
+        /// <summary>SE's MyFactionCollection.IsNpcFaction(tag), which the mod API doesn't expose.</summary>
         private static bool IsNpcFaction(IMyFaction faction)
         {
             if (MyDefinitionManager.Static.TryGetFactionDefinition(faction.Tag) != null) return true;
